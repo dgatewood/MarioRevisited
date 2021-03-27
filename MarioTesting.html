@@ -1,0 +1,870 @@
+<html> 
+<head>
+  <style>
+   *{padding: 0; margin:0;}
+   canvas{ background: #eee; display: block; margin: 0 auto;}
+   </style>
+</head>
+<body>
+<canvas id= "myCanvas" width="600" height="600"></canvas>
+<script type="text/javascript">
+let canvas = document.getElementById("myCanvas");
+let ctx = canvas.getContext("2d");
+document.addEventListener("keydown",keyDownHandler, false);
+document.addEventListener("keyup",keyUpHandler,false);
+let rightPressed = false;
+let leftPressed = false;
+let jumping = false;
+let fps = 60;
+let worldItems = new Image();
+worldItems.src = "misc-3.gif";
+let worldItems2 = new Image();
+worldItems2.src = "misc-3-mirror.gif";
+let worldItems3 = new Image();
+worldItems3.src = "items-objects.png";
+let enemies = new Image();
+enemies.src = "enemies.png";
+
+let marioX = 400;
+let marioY = 30;
+let marioIsDead = false;
+let marioNeedsBounce = false;
+let maxMarioHeight = 0;
+let isFalling = false;
+let lastButtonPressed = "right";
+let isBig = false;
+let isCrouching = false;
+let hasHitMonster = false;
+let blocks1 = [];
+
+let gameObjects = [];
+
+function GameObject()
+{
+	this.x = 0;
+	this.y = 0;
+	this.isBrick = false;
+	this.isQuestionBrick = false;
+	this.hasBeenHit = false;
+	this.isSolid = true;
+	this.containsCoins = false;
+	this.needsBounce = false;
+	this.frame = 0;
+	this.counter = 0;
+	this.speed = 0;
+	this.originalX = 0;
+	this.originalY = 0;
+	this.coinCounter = 0;
+	this.isCoin = false;
+	this.timerActive = false;
+	this.timer = 0;
+	this.isEnemy = false;
+	this.hasBeenKilled = false;
+	this.enemyType = 1;
+	
+	this.leavesShell = false;
+}
+
+let gameObject = new GameObject();
+gameObject.x = 480;
+gameObject.y = 375;
+gameObject.speed = 1;
+gameObject.originalX = 480;
+gameObject.originalY = 375;
+gameObject.isBrick = true;
+gameObject.containsCoins = true;
+gameObjects.push(gameObject);
+
+gameObject = new GameObject();
+gameObject.x = 517.5;
+gameObject.y = 375;
+gameObject.speed = 1;
+gameObject.originalX = 496;
+gameObject.originalY = 375;
+gameObject.isQuestionBrick = true;
+gameObject.containsCoins = true;
+gameObjects.push(gameObject);
+
+gameObject = new GameObject();
+gameObject.x = 480;
+gameObject.y = 416;
+gameObject.speed = 2;
+gameObject.isEnemy = true;
+gameObject.hasBeenKilled = false;
+gameObject.isFacingRight = true;
+gameObject.enemyType = 1;
+gameObjects.push(gameObject);
+
+///225 columns * 16 rows
+//70-71 are the first gap...88-90 second gap....155-156 third
+let currentBlock = 0;
+let currentAnimation  = 0;
+let animationCounter = 0;
+let speed = 0;
+let level1_1 = [
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+[ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]];
+
+
+function keyDownHandler(e){
+    if(e.keyCode == 37)
+    {
+	   leftPressed = true;
+	   lastButtonPressed = "left";
+	}
+	else if(e.keyCode == 39)
+	{
+	   rightPressed = true;
+	   lastButtonPressed = "right";
+	}
+	
+	
+	if(e.keyCode == 38 && !isFalling)
+	{
+		if(!jumping)
+	   {
+			maxMarioHeight = marioY - 270;
+		}
+	   jumping = true;
+	   
+	}
+	
+}
+
+function keyUpHandler(e){
+    if(e.keyCode == 37)
+	{
+	   leftPressed = false;
+	}
+	else if(e.keyCode == 39)
+	{
+	   rightPressed = false;
+	}
+	
+	if(e.keyCode == 38)
+	{
+	   jumping = false;
+	   isFalling = true;
+	}
+	
+}
+
+function Point(x, y)
+{
+	this.col = y;
+	this.row = x;
+}
+
+function isObjectAbove(x, y)
+{
+	let col = Math.floor(x /37.5);
+	let row = Math.floor(y /37.5);
+	
+	blocks1 = [];
+	
+	for(let i = 0 ; i <= row; i++)
+	{
+		for(let j = 0; j < level1_1[i].length; j++)
+			{
+				if(level1_1[i][j] == 1)
+				{
+					blocks1.push(new Point(i, j));
+				}
+			}
+	}		
+	
+	for(let i = 0; i < blocks1.length; i++)
+	{
+		if (x <= blocks1[i].col*37.5 + 37.5 &&
+		   x + 37.5 >= blocks1[i].col*37.5 &&
+		   y <= blocks1[i].row*37.5 + 37.5 &&
+		   y + 37.5 >= blocks1[i].row*37.5 ) {
+				console.log("there was a collision and the index was i " + i);
+				return true;
+			}
+	}
+	
+	for(let i = 0; i < gameObjects.length; i++)
+	{
+		if (x <= gameObjects[i].x + 37.5&&
+		   x + 37.5 >= gameObjects[i].x &&
+		   y <= gameObjects[i].y + 37.5 &&
+		   y + 37.5 >= gameObjects[i].y ) {
+				//console.log("there was a collision and the index was i " + i);
+				let enemyRow = Math.floor(gameObjects[i].y /37.5);
+				if(row >= enemyRow)
+				{
+					if(gameObjects[i].isBrick && 
+					!gameObjects[i].containsCoins)
+					{	
+						if(!isBig)
+						{
+							gameObjects[i].needsBounce = true;
+						}
+					}
+					else if(gameObjects[i].isBrick && 
+					gameObjects[i].containsCoins)
+					{	
+						
+						if(!isBig)
+						{
+							console.log("timer is: " +gameObjects[i].timer);
+							gameObjects[i].needsBounce = true;
+							gameObjects[i].timerActive = true;
+							if(gameObjects[i].timer < 300)
+							{
+								gO = new GameObject();
+								gO.x = gameObjects[i].x;
+								gO.y = gameObjects[i].y;
+								gO.frame = 0;
+								gO.counter = 0;
+								gO.speed = 1;
+								gO.isCoin = true;
+								gameObjects.push(gO);
+							}
+						}
+					}
+					else if(gameObjects[i].isQuestionBrick &&
+					gameObjects[i].needsBounce == false)
+					{	
+						gameObjects[i].needsBounce = true;
+						if(!gameObjects[i].hasBeenHit)
+						{
+							if(!gameObjects[i].containsCoins)
+							{
+							gO = new GameObject();
+							gO.x = gameObjects[i].x;
+							gO.y = gameObjects[i].y;
+							gO.frame = 0;
+							gO.counter = 0;
+							gO.speed = 1;
+							gO.isCoin = true;
+							gameObjects.push(gO);
+							}	
+						}
+					}
+					
+					
+					
+				}
+				if(row >= enemyRow)
+				{
+					return true;
+				}
+			}
+	}
+	
+	return false;
+}
+
+function isOnSolidGround(x, y)
+{
+	let col = Math.floor(x /37.5);
+	let row = Math.floor(y /37.5);
+	if(row < 0)
+	{
+		return false;
+	}
+	
+	blocks1 = [];
+	
+	for(let i = row + 1 ; i < level1_1.length; i++)
+	{
+		for(let j = 0; j < level1_1[i].length; j++)
+			{
+				if(level1_1[i][j] == 1)
+				{
+					blocks1.push(new Point(i, j));
+				}
+			}
+	}		
+	
+	for(let i = 0; i < blocks1.length; i++)
+	{
+		if (x <= blocks1[i].col*37.5 + 37.5 &&
+		   x + 37.5 >= blocks1[i].col*37.5 &&
+		   y <= blocks1[i].row*37.5 + 37.5 &&
+		   y + 37.5 >= blocks1[i].row*37.5 ) {
+				//console.log("there was a collision and the index was i " + i);
+				return true;
+			}
+	}
+	
+	for(let i = 0; i < gameObjects.length; i++)
+	{
+		if (x <= gameObjects[i].x + 37.5&&
+		   x + 37.5 >= gameObjects[i].x &&
+		   y <= gameObjects[i].y + 37.5 &&
+		   y + 37.5 >= gameObjects[i].y ) {
+				//console.log("there was a collision and the index was i " + i);
+				let enemyRow = Math.floor(gameObjects[i].y /37.5);
+				if(enemyRow >= row + 1)
+				{
+					if(gameObjects[i].isEnemy && 
+					!gameObjects[i].leavesShell)
+					{
+						gameObjects[i].hasBeenKilled = true;
+						gameObjects[i].frame = 0;
+						gameObjects[i].counter = 0;
+						marioNeedsBounce = true;
+						animationCounter = 0;
+						currentAnimation = 0;
+					}
+					return true;
+				}
+			}
+	}	
+	return false;
+}
+
+function isBlockedInX(x, y, isMario)
+{
+	let col = Math.floor(x /37.5);
+	let row = Math.floor(y /37.5);
+	
+	blocks1 = [];
+	
+	for(let i = 0; i <= row; i++)
+	{
+		for(let j = 0; j < level1_1[i].length; j++)
+			{
+				if(level1_1[i][j] == 1)
+				{
+					blocks1.push(new Point(i, j));
+				}
+			}
+	}		
+	
+	for(let i = 0; i < blocks1.length; i++)
+	{
+		if (x <= blocks1[i].col*37.5 + 37.5 &&
+		   x + 37.5 >= blocks1[i].col*37.5 &&
+		   y <= blocks1[i].row*37.5 + 37.5 &&
+		   y + 37.5 >= blocks1[i].row*37.5 ) {
+				//console.log("there was a collision and the index was i " + i);
+				
+				return true;
+			}
+	}
+	
+	for(let i = 0; i < gameObjects.length; i++)
+	{
+		let objectRow = Math.floor(gameObjects[i].y /37.5);
+		if (x <= gameObjects[i].x + 37.5&&
+		   x + 37.5 >= gameObjects[i].x &&
+		   y <= gameObjects[i].y + 37.5 &&
+		   y + 37.5 >= gameObjects[i].y && objectRow <= row) {
+					if(isMario && gameObjects[i].isEnemy)
+						{
+							marioIsDead = true;
+							counter = 0;
+							frame = 0;
+						}
+					if( !gameObjects[i].x == x ||
+					!gameObjects[i].x == x)
+					{
+						
+						return true;
+					}
+			}
+	}	
+
+	
+	return false;
+}
+
+function drawGameObjects()
+{
+	for(let i = 0; i < gameObjects.length; i++)
+		{
+			if(gameObjects[i].isBrick == true)
+			{
+				if(gameObjects[i].timerActive)
+				{
+					gameObjects[i].timer += 1;
+				}
+				if(gameObjects[i].needsBounce)
+				{
+					if(gameObjects[i].frame < 8)
+					{
+						gameObjects[i].y -= 5;
+					}
+					else
+					{
+						gameObjects[i].y += 5;
+					}
+					gameObjects[i].frame++;
+					if(gameObjects[i].frame >= 16)
+					{
+						gameObjects[i].needsBounce = false;
+						gameObjects[i].frame = 0;
+					}
+				}
+				ctx.drawImage(worldItems, 373, 102, 16, 16, 
+				gameObjects[i].x - marioX + 300, 
+				gameObjects[i].y, 37.5, 37.5);
+				
+			}	
+			
+			
+			if(gameObjects[i].isQuestionBrick == true)
+			{
+				if(gameObjects[i].needsBounce && !gameObjects[i].hasBeenHit)
+				{
+					if(gameObjects[i].frame < 8)
+					{
+						gameObjects[i].y -= 5;
+					}
+					else
+					{
+						gameObjects[i].y += 5;
+					}
+					gameObjects[i].frame++;
+					if(gameObjects[i].frame >= 16)
+					{
+						gameObjects[i].hasBeenHit = true;
+						gameObjects[i].needsBounce = false;
+						gameObjects[i].frame = 0;
+					}
+				}
+				if(!gameObjects[i].hasBeenHit)
+				{
+					ctx.drawImage(worldItems3, 0, 64, 16, 16, 
+					gameObjects[i].x - marioX + 300, 
+					gameObjects[i].y, 37.5, 37.5);
+				}
+				else
+				{
+					ctx.drawImage(worldItems3, 16, 64, 16, 16, 
+					gameObjects[i].x - marioX + 300, 
+					gameObjects[i].y, 37.5, 37.5);
+				}
+				
+			}	
+			
+			if(gameObjects[i].isCoin == true)
+			{
+				if(gameObjects[i].frame < 16)
+					{
+						gameObjects[i].y -= 5;
+					}
+					
+					gameObjects[i].frame++;
+					if(gameObjects[i].frame >= 16)
+					{
+						gameObjects.splice(i,1);
+						break;
+					}
+				if(gameObjects[i].frame > 14)
+				{
+					ctx.drawImage(worldItems3, 16, 97, 16, 16, 
+					gameObjects[i].x - marioX + 300, 
+					gameObjects[i].y, 37.5, 37.5);
+				}
+				else if(gameObjects[i].frame > 12)
+				{
+					ctx.drawImage(worldItems3, 16, 82, 16, 16, 
+					gameObjects[i].x - marioX + 300, 
+					gameObjects[i].y, 37.5, 37.5);
+				}
+				else if(gameObjects[i].frame > 10)
+				{
+					ctx.drawImage(worldItems3, 0, 97, 16, 16, 
+					gameObjects[i].x - marioX + 300, 
+					gameObjects[i].y, 37.5, 37.5);
+				}
+				else if(gameObjects[i].frame > 8)
+				{
+					ctx.drawImage(worldItems3, 0, 82, 16, 16, 
+					gameObjects[i].x - marioX + 300, 
+					gameObjects[i].y, 37.5, 37.5);
+				}
+				else if(gameObjects[i].frame > 6)
+				{
+					ctx.drawImage(worldItems3, 16, 97, 16, 16, 
+					gameObjects[i].x - marioX + 300, 
+					gameObjects[i].y, 37.5, 37.5);
+				}
+				else if(gameObjects[i].frame > 4)
+				{
+					ctx.drawImage(worldItems3, 16, 82, 16, 16, 
+					gameObjects[i].x - marioX + 300, 
+					gameObjects[i].y, 37.5, 37.5);
+				}
+				else if(gameObjects[i].frame > 2)
+				{
+					ctx.drawImage(worldItems3, 0, 97, 16, 16, 
+					gameObjects[i].x - marioX + 300, 
+					gameObjects[i].y, 37.5, 37.5);
+				}
+				else
+				{
+					ctx.drawImage(worldItems3, 0, 82, 16, 16, 
+					gameObjects[i].x - marioX + 300, 
+					gameObjects[i].y, 37.5, 37.5);
+				}
+			}	
+		if(gameObjects[i].isEnemy == true)
+			{
+				gameObjects[i].counter++;
+				if(!gameObjects[i].hasBeenKilled)
+				{
+					if(gameObjects[i].counter >= 8)
+					{
+						gameObjects[i].frame++;
+						gameObjects[i].counter = 0;
+						if(gameObjects[i].frame >= 2)
+						{
+							gameObjects[i].frame = 0;
+						}
+					}
+					if(gameObjects[i].isFacingRight)
+					{
+						gameObjects[i].x += gameObjects[i].speed;
+						if(isBlockedInX(gameObjects[i].x, gameObjects[i].y, false))
+						{
+							gameObjects[i].isFacingRight = !gameObjects[i].isFacingRight;
+						}
+					}
+					else
+					{
+						gameObjects[i].x -= gameObjects[i].speed;
+						if(isBlockedInX(gameObjects[i].x, gameObjects[i].y, false))
+						{
+							gameObjects[i].isFacingRight = !gameObjects[i].isFacingRight;
+						}
+					}
+					
+					if(!isOnSolidGround(gameObjects[i].x, gameObjects[i].y))
+					{
+						gameObjects[i].y += 6;
+					}
+						
+					if(gameObjects[i].frame == 0 &&
+					!gameObjects[i].hasBeenKilled)
+					{
+						ctx.drawImage(enemies, 0, 4, 16, 16, 
+						gameObjects[i].x - marioX + 300, 
+						gameObjects[i].y, 37.5, 37.5);
+					}
+					else if(gameObjects[i].frame == 1 &&
+					!gameObjects[i].hasBeenKilled)
+					{
+						ctx.drawImage(enemies, 30, 4, 16, 16, 
+						gameObjects[i].x - marioX + 300, 
+						gameObjects[i].y, 37.5, 37.5);
+					}
+				}
+				
+				
+				if(gameObjects[i].hasBeenKilled)
+				{
+					gameObjects[i].counter++;
+					ctx.drawImage(enemies, 60,0 , 16, 16, 
+					gameObjects[i].x - marioX + 300, 
+					gameObjects[i].y, 37.5, 37.5);
+					if(gameObjects[i].counter > 4)
+					{
+						gameObjects.splice(i,1);
+					}
+				}
+			}
+	}
+}
+
+function printMap(level)
+{
+	for(let i = 0; i < level.length; i++)
+		{
+			for(let j = Math.floor((marioX - 300) /37.5); j < Math.floor(marioX/37.5) + 17; j++)
+			{
+				if(level[i][j] == 0)
+				{
+					ctx.drawImage(worldItems, 275, 332, 16, 16, (j*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
+				}
+				if(level[i][j] == 1)
+				{
+					ctx.drawImage(worldItems, 373, 124, 16, 16, (j*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
+				}
+				///pipe starts at 614/46 and has w/h of 16*16
+				///extension 614/82
+				///top of pipe
+				if(level[i][j] == 2)
+				{
+					ctx.drawImage(worldItems, 275, 332, 16, 16, (j*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 275, 332, 16, 16, (j*37.5) - marioX + 300, ((i+1)*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 275, 332, 16, 16, ((j+1)*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 275, 332, 16, 16, ((j+1)*37.5) - marioX + 300, ((i+1)*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 614, 46, 32, 32, (j*37.5) - marioX + 300, (i*37.5) +4, 75, 75);
+				}
+				//extension
+				if(level[i][j] == 3)
+				{
+					ctx.drawImage(worldItems, 275, 332, 16, 16, (j*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 275, 332, 16, 16, ((j+1)*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 614, 83, 32, 16, (j*37.5) - marioX + 300, (i*37.5) +2, 75, 37.5);
+				}
+				
+			}
+		}
+	
+}
+
+
+function controls()
+{
+	if(rightPressed)
+	{
+		if(!isBlockedInX(marioX + 5 , marioY, true))
+		{
+			marioX += speed;
+		}
+	}
+	else if(leftPressed)
+	{
+		if(!isBlockedInX(marioX - 5, marioY, true))
+		{
+			marioX -= speed;
+		}
+	}
+
+	if(jumping)
+	{
+		
+		marioY -= 20;
+		
+		if(marioY <= maxMarioHeight)
+		{
+			isFalling = true;
+			jumping = false;
+		}
+		
+		if(isObjectAbove(marioX, marioY))
+		{
+			jumping = false;
+			isFalling = true;
+		}
+		if(rightPressed)
+		{
+			if(isBlockedInX(marioX + 5 , marioY, true))
+			{
+				marioX -= speed;
+			}
+		}
+		else if(leftPressed)
+		{
+			if(isBlockedInX(marioX - 5, marioY, true))
+			{
+				marioX += speed;
+			}
+		}
+	}
+	
+	
+
+	if(isFalling)
+	{
+		if(isOnSolidGround(marioX, marioY + 2))
+		{
+			isFalling = false;
+		}
+		
+	}
+	
+	if(!isOnSolidGround(marioX, marioY + 2))
+	{
+		
+		marioY += 10;
+	}
+	
+	
+	isBlockedInX(marioX , marioY, true);
+}
+
+function drawMario()
+{
+	animationCounter++;
+	let relativeX = 0;
+	if(marioX >= 300)
+	{
+		relativeX = 300;
+	}
+	else
+	{
+		relativeX = marioX;
+	}
+	
+	if(marioNeedsBounce)
+	{
+		if(animationCounter >= 3)
+			{
+				currentAnimation++;
+				animationCounter = 0;
+			}
+		if(currentAnimation < 2)
+		{
+			marioY -= 20;
+		}
+		else
+		{
+			currentAnimation = 0;
+			animationCounter = 0;
+			marioNeedsBounce = false;
+		}
+		if(lastButtonPressed == "right")
+		{
+			ctx.drawImage(worldItems, 139, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+		}
+		if(lastButtonPressed == "left")
+		{
+			ctx.drawImage(worldItems2, 524, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+		}
+	}
+	
+	else if(marioIsDead)
+	{
+		if(animationCounter >= 3)
+			{
+				frame++;
+				animationCounter = 0;
+			}
+		if(frame < 10)
+		{
+			marioY -= 10;
+		}
+		else
+		{
+			marioY += 10;
+		}
+		ctx.drawImage(worldItems, 45, 509, 16, 16, 
+		relativeX, marioY, 37.5, 37.5);	
+	}
+	else
+	{
+	if(rightPressed)
+	{
+		speed = 4;
+		if(isFalling == false && jumping == false)
+		{
+			if(currentAnimation == 0)
+			{
+				ctx.drawImage(worldItems, 84, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+			}
+			else if(currentAnimation == 1)
+			{
+				ctx.drawImage(worldItems, 100, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+			}
+			else if(currentAnimation == 2)
+			{
+				ctx.drawImage(worldItems, 116, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+			}
+			if(animationCounter >= 4)
+			{
+				currentAnimation++;
+				animationCounter = 0;
+				if(currentAnimation > 2)
+				{
+					currentAnimation = 0;
+				}
+			}
+		}
+		else
+		{
+			ctx.drawImage(worldItems, 139, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+			}
+		
+	}
+	else if(leftPressed)
+	{
+		speed = 4;
+		if(isFalling == false && jumping == false)
+		{
+			if(currentAnimation == 0)
+			{
+				ctx.drawImage(worldItems2, 582, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+			}
+			else if(currentAnimation == 1)
+			{
+				ctx.drawImage(worldItems2, 565, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+			}
+			else if(currentAnimation == 2)
+			{
+				ctx.drawImage(worldItems2, 546 , 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+			}
+			if(animationCounter >= 4)
+			{
+				currentAnimation++;
+				animationCounter = 0;
+				if(currentAnimation > 2)
+				{
+					currentAnimation = 0;
+				}
+			}
+		}
+		else
+		{
+			ctx.drawImage(worldItems2, 524, 507, 16, 16, relativeX, marioY, 37.5, 37.5);	
+		}
+	}
+	else if(jumping || isFalling)
+		{
+				if(lastButtonPressed == "right")
+				{
+					ctx.drawImage(worldItems, 139, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				}
+				if(lastButtonPressed == "left")
+				{
+					ctx.drawImage(worldItems2, 524, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				}
+		}
+else
+	{
+		if(lastButtonPressed == "right")
+			{
+				ctx.drawImage(worldItems, 22, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+			}
+		if(lastButtonPressed == "left")
+			{
+				ctx.drawImage(worldItems2, 643, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+			}
+	}
+	}
+}
+
+
+function draw () {
+   setTimeout(function() {
+   requestAnimationFrame(draw);
+   ctx.fillStyle = "rgb(20,20,20)";
+   ctx.fillRect(0,0,800,600);
+   ///all code goes here
+   hasHitMonster = false;
+   printMap(level1_1, marioX);
+   if(!marioIsDead)
+   {
+		controls();
+	}
+   drawGameObjects();
+   drawMario();
+
+   },1000/fps);
+}
+draw();
+
+</script>
+</body>
+</html>
