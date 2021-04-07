@@ -121,6 +121,7 @@ gameObject.speed = 1;
 gameObject.originalX = 496;
 gameObject.originalY = 375;
 gameObject.isQuestionBrick = true;
+gameObject.contains1Up = true;
 gameObjects.push(gameObject);
 
 gameObject = new GameObject();
@@ -456,6 +457,18 @@ function isObjectAbove(x, y, isBig)
 							gO.isMushroom = true;
 							gO.ignoreEnemies = true;
 							gameObjects.push(gO);
+							}
+							if(gameObjects[i].contains1Up)
+							{
+							gO = new GameObject();
+							gO.x = gameObjects[i].x;
+							gO.y = gameObjects[i].y;
+							gO.frame = 0;
+							gO.counter = 0;
+							gO.speed = 4;
+							gO.is1Up = true;
+							gO.ignoreEnemies = true;
+							gameObjects.push(gO);
 							}							
 						}
 					}
@@ -494,49 +507,146 @@ function isOnSolidGround(x, y, isMario, ignoresEnemies)
 				}
 			}
 	}		
-	
-	for(let i = 0; i < blocks1.length; i++)
+	if(isMario && isBig)
 	{
-		if (x + 5<= blocks1[i].col*37.5 + 37.5 &&
-		   x + 34 >= blocks1[i].col*37.5 &&
-		   y <= blocks1[i].row*37.5 + 37.5 &&
-		   y + 37.5 >= blocks1[i].row*37.5 ) {
-				//console.log("there was a collision and the index was i " + i);
-				return true;
-			}
-	}
-	
-	for(let i = 0; i < gameObjects.length; i++)
-	{
-		if (x <= gameObjects[i].x + 36&&
-		   x + 36 >= gameObjects[i].x &&
-		   y <= gameObjects[i].y + 37 &&
-		   y + 37 >= gameObjects[i].y ) {
-				//console.log("there was a collision and the index was i " + i);
-				let enemyRow = Math.floor(gameObjects[i].y /37.5);
-				if(enemyRow >= row + 1)
-				{
-					if(gameObjects[i].isEnemy && 
-					!gameObjects[i].leavesShell && isMario)
+		for(let i = 0; i < blocks1.length; i++)
+		{
+			if (x + 5<= blocks1[i].col*37.5 + 37.5 &&
+			   x + 34 >= blocks1[i].col*37.5 &&
+			   y <= blocks1[i].row*37.5 + 37.5 &&
+			   y + 75 >= blocks1[i].row*37.5 ) {
+					//console.log("there was a collision and the index was i " + i);
+					return true;
+				}
+		}
+		
+		
+		for(let i = 0; i < gameObjects.length; i++)
+		{
+			if (x <= gameObjects[i].x + 36&&
+			   x + 36 >= gameObjects[i].x &&
+			   y <= gameObjects[i].y + 37 &&
+			   y + 75 >= gameObjects[i].y ) {
+					//console.log("there was a collision and the index was i " + i);
+					let enemyRow = Math.floor(gameObjects[i].y /37.5);
+					if(enemyRow >= row)
 					{
-						gameObjects[i].hasBeenKilled = true;
-						gameObjects[i].frame = 0;
-						gameObjects[i].counter = 0;
-						marioNeedsBounce = true;
-						animationCounter = 0;
-						currentAnimation = 0;
-					}
-					if(ignoresEnemies)
-					{
-						return false;
-					}
-					else
-					{
-						return true;
+						if(gameObjects[i].isEnemy && 
+						!gameObjects[i].leavesShell && isMario)
+						{
+							gameObjects[i].hasBeenKilled = true;
+							gameObjects[i].frame = 0;
+							gameObjects[i].counter = 0;
+							marioNeedsBounce = true;
+							animationCounter = 0;
+							currentAnimation = 0;
+						}
+						if(ignoresEnemies)
+						{
+							return false;
+						}
+						else
+						{
+							return true;
+						}
 					}
 				}
-			}
-	}	
+		}
+	}
+	if(isMario)
+	{
+		for(let i = 0; i < blocks1.length; i++)
+		{
+			if (x + 5<= blocks1[i].col*37.5 + 37.5 &&
+			   x + 34 >= blocks1[i].col*37.5 &&
+			   y <= blocks1[i].row*37.5 + 37.5 &&
+			   y + 37.5 >= blocks1[i].row*37.5 ) {
+					//console.log("there was a collision and the index was i " + i);
+					return true;
+				}
+		}
+		
+		
+		for(let i = 0; i < gameObjects.length; i++)
+		{
+			if (x <= gameObjects[i].x + 36&&
+			   x + 36 >= gameObjects[i].x &&
+			   y <= gameObjects[i].y + 37 &&
+			   y + 37.5 >= gameObjects[i].y ) {
+					//console.log("there was a collision and the index was i " + i);
+					let enemyRow = Math.floor(gameObjects[i].y /37.5);
+					if(enemyRow >= row + 1)
+					{
+						if(gameObjects[i].isEnemy && 
+						!gameObjects[i].leavesShell && isMario)
+						{
+							gameObjects[i].hasBeenKilled = true;
+							gameObjects[i].frame = 0;
+							gameObjects[i].counter = 0;
+							marioNeedsBounce = true;
+							animationCounter = 0;
+							currentAnimation = 0;
+						}
+						if(ignoresEnemies)
+						{
+							return false;
+						}
+						else
+						{
+							return true;
+						}
+					}
+				}
+		}
+	}
+	else
+	{
+		for(let i = 0; i < blocks1.length; i++)
+		{
+			if (x + 5<= blocks1[i].col*37.5 + 37.5 &&
+			   x + 34 >= blocks1[i].col*37.5 &&
+			   y <= blocks1[i].row*37.5 + 37.5 &&
+			   y + 37.5 >= blocks1[i].row*37.5 ) {
+					//console.log("there was a collision and the index was i " + i);
+					return true;
+				}
+		}
+		
+		
+		for(let i = 0; i < gameObjects.length; i++)
+		{
+			if (x <= gameObjects[i].x + 36&&
+			   x + 36 >= gameObjects[i].x &&
+			   y <= gameObjects[i].y + 37 &&
+			   y + 37 >= gameObjects[i].y ) {
+					//console.log("there was a collision and the index was i " + i);
+					let enemyRow = Math.floor(gameObjects[i].y /37.5);
+					if(enemyRow >= row + 1)
+					{
+						if(gameObjects[i].isEnemy && 
+						!gameObjects[i].leavesShell && isMario)
+						{
+							gameObjects[i].hasBeenKilled = true;
+							gameObjects[i].frame = 0;
+							gameObjects[i].counter = 0;
+							marioNeedsBounce = true;
+							animationCounter = 0;
+							currentAnimation = 0;
+						}
+						if(ignoresEnemies)
+						{
+							return false;
+						}
+						else
+						{
+							return true;
+						}
+					}
+				}
+		}
+	}
+	
+		
 	return false;
 }
 
@@ -558,45 +668,152 @@ function isBlockedInX(x, y, isMario, ignoresEnemies)
 			}
 	}		
 	
-	for(let i = 0; i < blocks1.length; i++)
+	
+	if(isMario && isBig)
 	{
-		if (x <= blocks1[i].col*37.5 + 37.5 &&
-		   x + 37.5 >= blocks1[i].col*37.5 &&
-		   y <= blocks1[i].row*37.5 + 37.5 &&
-		   y + 37.5 >= blocks1[i].row*37.5 ) {
-				//console.log("there was a collision and the index was i " + i);
-				
-				return true;
-			}
+		for(let i = 0; i < blocks1.length; i++)
+		{
+			if (x <= blocks1[i].col*37.5 + 37.5 &&
+			   x + 37.5 >= blocks1[i].col*37.5 &&
+			   y <= blocks1[i].row*37.5 + 37.5 &&
+			   y + 75 >= blocks1[i].row*37.5 ) {
+					//console.log("there was a collision and the index was i " + i);
+					
+					return true;
+				}
+		}
+	
+		for(let i = 0; i < gameObjects.length; i++)
+		{
+			let objectRow = Math.floor(gameObjects[i].y /37.5);
+			if (x + 10<= gameObjects[i].x + 37.5&&
+			   x + 15 >= gameObjects[i].x &&
+			   y <= gameObjects[i].y + 37.5 &&
+			   y + 75 >= gameObjects[i].y) {
+						if(isMario && gameObjects[i].isEnemy)
+							{
+								marioIsDead = true;
+								counter = 0;
+								frame = 0;
+							}
+						if(isMario && gameObjects[i].isMushroom)
+						{
+							gameObjects.splice(i, 1);
+							isBig = true;
+						}
+						if( !gameObjects[i].x == x ||
+						!gameObjects[i].x == x)
+						{
+							if(ignoreEnemies == true && gameObjects[i].isEnemy)
+							{
+								return false;
+							}
+							else
+							{
+								return true;
+							}
+						}
+				}
+		}
+	}
+	else if(isMario)
+	{
+		for(let i = 0; i < blocks1.length; i++)
+		{
+			if (x <= blocks1[i].col*37.5 + 37.5 &&
+			   x + 37.5 >= blocks1[i].col*37.5 &&
+			   y <= blocks1[i].row*37.5 + 37.5 &&
+			   y + 37.5 >= blocks1[i].row*37.5 ) {
+					//console.log("there was a collision and the index was i " + i);
+					
+					return true;
+				}
+		}
+		
+		for(let i = 0; i < gameObjects.length; i++)
+		{
+			let objectRow = Math.floor(gameObjects[i].y /37.5);
+			if (x + 10<= gameObjects[i].x + 37.5&&
+			   x + 15 >= gameObjects[i].x &&
+			   y <= gameObjects[i].y + 37.5 &&
+			   y + 75 >= gameObjects[i].y) {
+						if(isMario && gameObjects[i].isEnemy)
+							{
+								marioIsDead = true;
+								counter = 0;
+								frame = 0;
+							}
+						if(isMario && gameObjects[i].isMushroom)
+						{
+							gameObjects.splice(i, 1);
+							marioY -= 38;
+							isBig = true;
+						}
+						if( !gameObjects[i].x == x ||
+						!gameObjects[i].x == x)
+						{
+							if(ignoreEnemies == true && gameObjects[i].isEnemy)
+							{
+								return false;
+							}
+							else
+							{
+								return true;
+							}
+						}
+				}
+		}
+	}
+	else{
+		for(let i = 0; i < blocks1.length; i++)
+		{
+			if (x <= blocks1[i].col*37.5 + 37.5 &&
+			   x + 37.5 >= blocks1[i].col*37.5 &&
+			   y <= blocks1[i].row*37.5 + 37.5 &&
+			   y + 37.5 >= blocks1[i].row*37.5 ) {
+					//console.log("there was a collision and the index was i " + i);
+					
+					return true;
+				}
+		}
+	
+	
+		for(let i = 0; i < gameObjects.length; i++)
+		{
+			let objectRow = Math.floor(gameObjects[i].y /37.5);
+			if (x + 10<= gameObjects[i].x + 37.5&&
+			   x + 15 >= gameObjects[i].x &&
+			   y <= gameObjects[i].y + 37.5 &&
+			   y + 37.5 >= gameObjects[i].y) {
+						if(isMario && gameObjects[i].isEnemy)
+							{
+								marioIsDead = true;
+								counter = 0;
+								frame = 0;
+							}
+						if(isMario && gameObjects[i].isMushroom)
+						{
+							gameObjects.splice(i, 1);
+							
+							isBig = true;
+						}
+						if( !gameObjects[i].x == x ||
+						!gameObjects[i].x == x)
+						{
+							if(ignoreEnemies == true && gameObjects[i].isEnemy)
+							{
+								return false;
+							}
+							else
+							{
+								return true;
+							}
+						}
+				}
+		}
 	}
 	
-	for(let i = 0; i < gameObjects.length; i++)
-	{
-		let objectRow = Math.floor(gameObjects[i].y /37.5);
-		if (x + 10<= gameObjects[i].x + 37.5&&
-		   x + 15 >= gameObjects[i].x &&
-		   y <= gameObjects[i].y + 37.5 &&
-		   y + 37.5 >= gameObjects[i].y) {
-					if(isMario && gameObjects[i].isEnemy)
-						{
-							marioIsDead = true;
-							counter = 0;
-							frame = 0;
-						}
-					if( !gameObjects[i].x == x ||
-					!gameObjects[i].x == x)
-					{
-						if(ignoreEnemies == true && gameObjects[i].isEnemy)
-						{
-							return false;
-						}
-						else
-						{
-							return true;
-						}
-					}
-			}
-	}	
+		
 
 	
 	return false;
@@ -734,11 +951,12 @@ function drawGameObjects()
 				}
 			}	
 			
-			if(gameObjects[i].isMushroom == true)
+			if(gameObjects[i].isMushroom == true ||
+				gameObjects[i].is1Up == true)
 			{
 				if(gameObjects[i].frame < 10)
 					{
-						gameObjects[i].y -= 8;
+						gameObjects[i].y -= 13;
 					}
 					
 					gameObjects[i].frame++;
@@ -754,13 +972,20 @@ function drawGameObjects()
 				
 				if(!isOnSolidGround(gameObjects[i].x, gameObjects[i].y, false, true))
 					{
-						gameObjects[i].y += 4;
+						gameObjects[i].y += 6;
 					}
-				
-				ctx.drawImage(worldItems, 71, 43, 16, 16, 
-					gameObjects[i].x - marioX + 300, 
-					gameObjects[i].y, 37.5, 37.5);
-				
+				if(gameObjects[i].isMushroom == true)
+				{
+					ctx.drawImage(worldItems, 71, 43, 16, 16, 
+						gameObjects[i].x - marioX + 300, 
+						gameObjects[i].y, 37.5, 37.5);
+				}
+				else if(gameObjects[i].is1Up == true)
+				{
+					ctx.drawImage(worldItems, 52, 43, 16, 16, 
+						gameObjects[i].x - marioX + 300, 
+						gameObjects[i].y, 37.5, 37.5);
+				}
 					
 			}
 			
@@ -966,122 +1191,26 @@ function drawMario()
 	{
 		relativeX = marioX;
 	}
-	
-	if(marioNeedsBounce)
+	if(!isBig)
 	{
-		if(animationCounter >= 3)
-			{
-				currentAnimation++;
-				animationCounter = 0;
-			}
-		if(currentAnimation < 2)
+		if(marioNeedsBounce)
 		{
-			marioY -= 20;
-		}
-		else
-		{
-			currentAnimation = 0;
-			animationCounter = 0;
-			marioNeedsBounce = false;
-		}
-		if(lastButtonPressed == "right")
-			{
-				ctx.drawImage(worldItems, 139, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
-			}
-			if(lastButtonPressed == "left")
-			{
-				ctx.drawImage(worldItems2, 524, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
-			}
-	}
-	
-	else if(marioIsDead)
-	{
-		if(animationCounter >= 3)
-			{
-				frame++;
-				animationCounter = 0;
-			}
-		if(frame < 10)
-		{
-			marioY -= 10;
-		}
-		else
-		{
-			marioY += 10;
-		}
-		ctx.drawImage(worldItems, 45, 509, 16, 16, 
-		relativeX, marioY, 37.5, 37.5);	
-	}
-	else
-	{
-	if(rightPressed)
-	{
-		speed = 4;
-		if(isFalling == false && jumping == false)
-		{
-			if(currentAnimation == 0)
-			{
-				ctx.drawImage(worldItems, 84, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
-			}
-			else if(currentAnimation == 1)
-			{
-				ctx.drawImage(worldItems, 100, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
-			}
-			else if(currentAnimation == 2)
-			{
-				ctx.drawImage(worldItems, 116, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
-			}
-			if(animationCounter >= 4)
-			{
-				currentAnimation++;
-				animationCounter = 0;
-				if(currentAnimation > 2)
+			if(animationCounter >= 3)
 				{
-					currentAnimation = 0;
+					currentAnimation++;
+					animationCounter = 0;
 				}
-			}
-		}
-		else
-		{
-			ctx.drawImage(worldItems, 139, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
-			}
-		
-	}
-	else if(leftPressed)
-	{
-		speed = 4;
-		if(isFalling == false && jumping == false)
-		{
-			if(currentAnimation == 0)
+			if(currentAnimation < 2)
 			{
-				ctx.drawImage(worldItems2, 582, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				marioY -= 20;
 			}
-			else if(currentAnimation == 1)
+			else
 			{
-				ctx.drawImage(worldItems2, 565, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
-			}
-			else if(currentAnimation == 2)
-			{
-				ctx.drawImage(worldItems2, 546 , 507, 16, 16, relativeX, marioY, 37.5, 37.5);
-			}
-			if(animationCounter >= 4)
-			{
-				currentAnimation++;
+				currentAnimation = 0;
 				animationCounter = 0;
-				if(currentAnimation > 2)
-				{
-					currentAnimation = 0;
-				}
+				marioNeedsBounce = false;
 			}
-		}
-		else
-		{
-			ctx.drawImage(worldItems2, 524, 507, 16, 16, relativeX, marioY, 37.5, 37.5);	
-		}
-	}
-	else if(jumping || isFalling)
-		{
-				if(lastButtonPressed == "right")
+			if(lastButtonPressed == "right")
 				{
 					ctx.drawImage(worldItems, 139, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
 				}
@@ -1090,17 +1219,253 @@ function drawMario()
 					ctx.drawImage(worldItems2, 524, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
 				}
 		}
-else
-	{
-		if(lastButtonPressed == "right")
+		
+		else if(marioIsDead)
+		{
+			if(animationCounter >= 3)
+				{
+					frame++;
+					animationCounter = 0;
+				}
+			if(frame < 10)
 			{
-				ctx.drawImage(worldItems, 22, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				marioY -= 10;
 			}
-		if(lastButtonPressed == "left")
+			else
 			{
-				ctx.drawImage(worldItems2, 643, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				marioY += 10;
 			}
+			ctx.drawImage(worldItems, 45, 509, 16, 16, 
+			relativeX, marioY, 37.5, 37.5);	
+		}
+		else
+		{
+		if(rightPressed)
+		{
+			speed = 4;
+			if(isFalling == false && jumping == false)
+			{
+				if(currentAnimation == 0)
+				{
+					ctx.drawImage(worldItems, 84, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				}
+				else if(currentAnimation == 1)
+				{
+					ctx.drawImage(worldItems, 100, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				}
+				else if(currentAnimation == 2)
+				{
+					ctx.drawImage(worldItems, 116, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				}
+				if(animationCounter >= 4)
+				{
+					currentAnimation++;
+					animationCounter = 0;
+					if(currentAnimation > 2)
+					{
+						currentAnimation = 0;
+					}
+				}
+			}
+			else
+			{
+				ctx.drawImage(worldItems, 139, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				}
+			
+		}
+		else if(leftPressed)
+		{
+			speed = 4;
+			if(isFalling == false && jumping == false)
+			{
+				if(currentAnimation == 0)
+				{
+					ctx.drawImage(worldItems2, 582, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				}
+				else if(currentAnimation == 1)
+				{
+					ctx.drawImage(worldItems2, 565, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				}
+				else if(currentAnimation == 2)
+				{
+					ctx.drawImage(worldItems2, 546 , 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				}
+				if(animationCounter >= 4)
+				{
+					currentAnimation++;
+					animationCounter = 0;
+					if(currentAnimation > 2)
+					{
+						currentAnimation = 0;
+					}
+				}
+			}
+			else
+			{
+				ctx.drawImage(worldItems2, 524, 507, 16, 16, relativeX, marioY, 37.5, 37.5);	
+			}
+		}
+		else if(jumping || isFalling)
+			{
+					if(lastButtonPressed == "right")
+					{
+						ctx.drawImage(worldItems, 139, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+					}
+					if(lastButtonPressed == "left")
+					{
+						ctx.drawImage(worldItems2, 524, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+					}
+			}
+	else
+		{
+			if(lastButtonPressed == "right")
+				{
+					ctx.drawImage(worldItems, 22, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				}
+			if(lastButtonPressed == "left")
+				{
+					ctx.drawImage(worldItems2, 643, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				}
+		}
+		}
 	}
+	else
+	{
+		if(marioNeedsBounce)
+		{
+			if(animationCounter >= 3)
+				{
+					currentAnimation++;
+					animationCounter = 0;
+				}
+			if(currentAnimation < 2)
+			{
+				marioY -= 20;
+			}
+			else
+			{
+				currentAnimation = 0;
+				animationCounter = 0;
+				marioNeedsBounce = false;
+			}
+			if(lastButtonPressed == "right")
+				{
+					ctx.drawImage(worldItems, 48, 546, 16, 32, relativeX, marioY, 37.5, 75);
+				}
+				if(lastButtonPressed == "left")
+				{
+					ctx.drawImage(worldItems2, 497, 546, 16, 32, relativeX, marioY, 37.5, 75);
+				}
+		}
+		
+		else if(marioIsDead)
+		{
+			if(animationCounter >= 3)
+				{
+					frame++;
+					animationCounter = 0;
+				}
+			if(frame < 10)
+			{
+				marioY -= 10;
+			}
+			else
+			{
+				marioY += 10;
+			}
+			ctx.drawImage(worldItems, 45, 509, 16, 16, 
+			relativeX, marioY, 37.5, 37.5);	
+		}
+		else
+		{
+		if(rightPressed)
+		{
+			speed = 4;
+			if(isFalling == false && jumping == false)
+			{
+				if(currentAnimation == 0)
+				{
+					ctx.drawImage(worldItems, 95, 547, 16, 34, relativeX, marioY, 37.5, 75);
+				}
+				else if(currentAnimation == 1)
+				{
+					ctx.drawImage(worldItems, 115, 547, 16, 34, relativeX, marioY, 37.5,75);
+				}
+				else if(currentAnimation == 2)
+				{
+					ctx.drawImage(worldItems, 140, 547, 16, 34, relativeX, marioY, 37.5, 75);
+				}
+				if(animationCounter >= 4)
+				{
+					currentAnimation++;
+					animationCounter = 0;
+					if(currentAnimation > 2)
+					{
+						currentAnimation = 0;
+					}
+				}
+			}
+			else
+			{
+				ctx.drawImage(worldItems, 167, 548, 16, 32, relativeX, marioY, 37.5, 75);
+			}
+			
+		}
+		else if(leftPressed)
+		{
+			speed = 4;
+			if(isFalling == false && jumping == false)
+			{
+				if(currentAnimation == 0)
+				{
+					ctx.drawImage(worldItems2, 572, 547, 16, 34, relativeX, marioY, 37.5, 75);
+				}
+				else if(currentAnimation == 1)
+				{
+					ctx.drawImage(worldItems2, 549, 547, 16, 34, relativeX, marioY, 37.5, 75);
+				}
+				else if(currentAnimation == 2)
+				{
+					ctx.drawImage(worldItems2, 524 , 547, 16, 34, relativeX, marioY, 37.5, 75);
+				}
+				if(animationCounter >= 4)
+				{
+					currentAnimation++;
+					animationCounter = 0;
+					if(currentAnimation > 2)
+					{
+						currentAnimation = 0;
+					}
+				}
+			}
+			else
+			{
+				ctx.drawImage(worldItems2, 497, 546, 16, 34, relativeX, marioY, 37.5, 75);	
+			}
+		}
+		else if(jumping || isFalling)
+			{
+					if(lastButtonPressed == "right")
+					{
+						ctx.drawImage(worldItems, 167, 546, 16, 34, relativeX, marioY, 37.5, 75);
+					}
+					if(lastButtonPressed == "left")
+					{
+						ctx.drawImage(worldItems2, 497, 546, 16, 34, relativeX, marioY, 37.5, 75);
+					}
+			}
+	else
+		{
+			if(lastButtonPressed == "right")
+				{
+					ctx.drawImage(worldItems, 48, 548, 16, 32, relativeX, marioY, 37.5, 75);
+				}
+			if(lastButtonPressed == "left")
+				{
+					ctx.drawImage(worldItems2, 617, 549, 16, 32, relativeX, marioY, 37.5, 75);
+				}
+		}
+		}
 	}
 }
 
