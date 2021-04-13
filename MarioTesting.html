@@ -12,6 +12,7 @@ let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
 document.addEventListener("keydown",keyDownHandler, false);
 document.addEventListener("keyup",keyUpHandler,false);
+let hasStartedGame = false;
 let rightPressed = false;
 let leftPressed = false;
 let jumping = false;
@@ -25,6 +26,11 @@ worldItems3.src = "items-objects.png";
 let enemies = new Image();
 enemies.src = "enemies.png";
 
+let backgroundMusic = new Audio();
+backgroundMusic.src = "./media/smb_over.wav";
+backgroundMusic.loop = true;
+
+
 let marioX = 400;
 let marioY = 30;
 let marioIsDead = false;
@@ -34,11 +40,14 @@ let isFalling = false;
 let lastButtonPressed = "right";
 let isBig = false;
 let canFire = false;
+let canFireFireball = false;
+let canFireCounter = 0;
 let isCrouching = false;
 ///let hasHitMonster = false;
 let blocks1 = [];
 
 let gameObjects = [];
+let projectiles = [];
 let backgroundGameObjects = [];
 
 function GameObject()
@@ -58,9 +67,11 @@ function GameObject()
 	this.isFlower = false;
 	this.needsBounce = false;
 	this.ignoreEnemies = false;
+	this.isFireball = false;
 	this.frame = 0;
 	this.counter = 0;
 	this.speed = 0;
+	this.verticalSpeed = 0;
 	this.originalX = 0;
 	this.originalY = 0;
 	this.coinCounter = 0;
@@ -333,6 +344,33 @@ function keyDownHandler(e){
 	   
 	}
 	
+	if(e.keyCode == 13 && !hasStartedGame)
+	{
+		hasStartedGame = true;
+		backgroundMusic.play();
+	}
+	
+	if(e.keyCode == 66 && canFireFireball)
+	{
+		canFireFireball = false;
+		canFireCounter = 0;
+	    gameObject = new GameObject();
+		gameObject.x = marioX + 16;
+		gameObject.y = marioY + 16;
+		if(lastButtonPressed = "right")
+		{
+			gameObject.speed = 8;
+		}
+		else
+		{
+			gameObject.speed = -8;
+		}
+		gameObject.verticalSpeed = 4;
+		gameObject.isFireball = true;
+		projectiles.push(gameObject);
+		playSound("./media/smb_fireball.wav");
+	}
+	
 }
 
 function keyUpHandler(e){
@@ -351,6 +389,14 @@ function keyUpHandler(e){
 	   isFalling = true;
 	}
 	
+}
+
+
+function playSound(source)
+{
+	let sound = new Audio();
+	sound.src = source;
+	sound.play();
 }
 
 function Point(x, y)
@@ -425,6 +471,7 @@ function isObjectAbove(x, y, isBig)
 								gO.speed = 1;
 								gO.isCoin = true;
 								gameObjects.push(gO);
+								playSound("./media/smb_coin.wav");
 							}
 						}
 					}
@@ -444,6 +491,7 @@ function isObjectAbove(x, y, isBig)
 							gO.speed = 1;
 							gO.isCoin = true;
 							gameObjects.push(gO);
+							playSound("./media/smb_coin.wav");
 							}
 							if(gameObjects[i].containsMushroom)
 							{
@@ -456,6 +504,7 @@ function isObjectAbove(x, y, isBig)
 							gO.isMushroom = true;
 							gO.ignoreEnemies = true;
 							gameObjects.push(gO);
+							playSound("./media/smb_powerup_appears.wav");
 							}
 							if(gameObjects[i].contains1Up)
 							{
@@ -468,6 +517,7 @@ function isObjectAbove(x, y, isBig)
 							gO.is1Up = true;
 							gO.ignoreEnemies = true;
 							gameObjects.push(gO);
+							playSound("./media/smb_powerup_appears.wav");
 							}	
 							if(gameObjects[i].containsFlower)
 							{
@@ -480,6 +530,7 @@ function isObjectAbove(x, y, isBig)
 							gO.isFlower = true;
 							gO.ignoreEnemies = true;
 							gameObjects.push(gO);
+							playSound("./media/smb_powerup_appears.wav");
 							}								
 						}
 					}
@@ -551,6 +602,7 @@ function isOnSolidGround(x, y, isMario, ignoresEnemies)
 							marioNeedsBounce = true;
 							animationCounter = 0;
 							currentAnimation = 0;
+							playSound("./media/smb_stomp.wav");
 						}
 						if(ignoresEnemies)
 						{
@@ -706,17 +758,20 @@ function isBlockedInX(x, y, isMario, ignoresEnemies)
 								marioIsDead = true;
 								counter = 0;
 								frame = 0;
+								playSound("./media/smb_mariodie.wav");
 							}
 						if(isMario && gameObjects[i].isMushroom)
 						{
 							gameObjects.splice(i, 1);
 							isBig = true;
+							playSound("./media/smb_powerup.wav");
 						}
 						if(gameObjects[i].isFlower)
 						{
 							gameObjects.splice(i, 1);
 							
 							canFire = true;
+							playSound("./media/smb_powerup.wav");
 						}
 						if( !gameObjects[i].x == x ||
 						!gameObjects[i].x == x)
@@ -759,12 +814,14 @@ function isBlockedInX(x, y, isMario, ignoresEnemies)
 								marioIsDead = true;
 								counter = 0;
 								frame = 0;
+								playSound("./media/smb_mariodie.wav");
 							}
 						if(isMario && gameObjects[i].isMushroom)
 						{
 							gameObjects.splice(i, 1);
 							marioY -= 38;
 							isBig = true;
+							playSound("./media/smb_powerup.wav");
 						}
 						
 						if(gameObjects[i].isFlower)
@@ -773,6 +830,7 @@ function isBlockedInX(x, y, isMario, ignoresEnemies)
 							marioY -= 38;
 							isBig = true;
 							canFire = true;
+							playSound("./media/smb_powerup.wav");
 						}
 						if( !gameObjects[i].x == x ||
 						!gameObjects[i].x == x)
@@ -866,7 +924,9 @@ function drawGameObjects()
 				gameObjects[i].x - marioX + 300, 
 				gameObjects[i].y, 37.5, 37.5);
 				
-			}	
+			}
+
+			
 			
 			
 			if(gameObjects[i].isQuestionBrick == true)
@@ -1019,7 +1079,7 @@ function drawGameObjects()
 			}
 			
 			
-		if(gameObjects[i].isEnemy == true)
+			if(gameObjects[i].isEnemy == true)
 			{
 				gameObjects[i].counter++;
 				if(!gameObjects[i].hasBeenKilled)
@@ -1361,6 +1421,16 @@ function drawMario()
 	
 	else if(canFire)
 	{
+		
+		if(canFireCounter == 30 && canFireFireball == false)
+		{
+			canFireFireball = true;
+		}
+		else
+		{
+			canFireCounter += 1;
+		}
+		
 		if(marioNeedsBounce)
 		{
 			if(animationCounter >= 3)
@@ -1681,6 +1751,67 @@ function drawBackground()
 	}
 }
 
+function drawProjectiles()
+{
+	for( let i = 0; i < projectiles.length; i++)
+	{
+		coinCounter += 1;
+		if(coinCounter < 4)
+		{
+			projectiles[i].y += projectiles[i].verticalSpeed;
+		}
+		else if( coinCounter < 8)
+		{
+		
+		}
+		else
+		{
+			coinCounter = 0;
+		}
+		projectiles[i].x += projectiles[i].speed;
+		projectiles[i].timer += 1;
+		if(projectiles[i].timer % 3== 0)
+		{
+			projectiles[i].frame += 1;
+		}
+		if(projectiles[i].frame > 3)
+		{
+			projectiles[i].frame = 0;
+		}
+		
+		if(projectiles[i].frame == 0)
+		{
+			ctx.drawImage(worldItems, 313, 945, 8, 8, 
+				projectiles[i].x - marioX + 300, 
+				projectiles[i].y, 37.5/2, 37.5/2);
+		}
+		else if(projectiles[i].frame == 1)
+		{
+			ctx.drawImage(worldItems, 324, 945, 8, 8, 
+				projectiles[i].x - marioX + 300, 
+				projectiles[i].y, 37.5/2, 37.5/2);
+		}
+		else if(projectiles[i].frame == 2)
+		{
+			ctx.drawImage(worldItems, 336, 945, 8, 8, 
+				projectiles[i].x - marioX + 300, 
+				projectiles[i].y, 37.5/2, 37.5/2);
+		}
+		else
+		{
+			ctx.drawImage(worldItems, 348, 945, 8, 8, 
+				projectiles[i].x - marioX + 300, 
+				projectiles[i].y, 37.5/2, 37.5/2);
+		}	
+	}
+}
+
+function drawGameStart()
+{
+	ctx.fillStyle = "rgb(20,20,20)";
+	ctx.font = "30px Arial";
+	ctx.fillText("Click enter to start", 200, 200);
+}
 
 function draw () {
    setTimeout(function() {
@@ -1689,15 +1820,23 @@ function draw () {
    ctx.fillRect(0,0,800,600);
    
    ///all code goes here
-   hasHitMonster = false;
-   printMap(level1_1, marioX);
-   
-   if(!marioIsDead)
+   if(!hasStartedGame)
    {
-		controls();
-	}
-   drawGameObjects();
-   drawMario();
+		drawGameStart();
+   }
+   else
+   {
+	   hasHitMonster = false;
+	   printMap(level1_1, marioX);
+	   
+	   if(!marioIsDead)
+	   {
+			controls();
+		}
+	   drawGameObjects();
+	   drawProjectiles();
+	   drawMario();
+   }
 
    },1000/fps);
 }
