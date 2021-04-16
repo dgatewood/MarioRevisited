@@ -49,6 +49,7 @@ let blocks1 = [];
 let gameObjects = [];
 let projectiles = [];
 let backgroundGameObjects = [];
+let marioLives = 3;
 
 function GameObject()
 {
@@ -334,14 +335,20 @@ function keyDownHandler(e){
 	}
 	
 	
-	if(e.keyCode == 38 && !isFalling)
+	if(e.keyCode == 38 && isOnSolidGround(marioX, marioY , true, false, false))
 	{
 		if(!jumping)
 	   {
 			maxMarioHeight = marioY - 270;
 		}
 	   jumping = true;
-	   
+	   if(isBig)
+	   {
+			playSound("./media/smb_jump-super.wav");
+	   }
+	   else{
+			playSound("./media/smb_jump-small.wav");
+	   }
 	}
 	
 	if(e.keyCode == 13 && !hasStartedGame)
@@ -357,7 +364,7 @@ function keyDownHandler(e){
 	    gameObject = new GameObject();
 		gameObject.x = marioX + 16;
 		gameObject.y = marioY + 16;
-		if(lastButtonPressed = "right")
+		if(lastButtonPressed == "right")
 		{
 			gameObject.speed = 8;
 		}
@@ -548,7 +555,7 @@ function isObjectAbove(x, y, isBig)
 	return false;
 }
 
-function isOnSolidGround(x, y, isMario, ignoresEnemies)
+function isOnSolidGround(x, y, isMario, ignoresEnemies, isFireball, fireIndex = -1)
 {
 	let col = Math.floor(x /37.5);
 	let row = Math.floor(y /37.5);
@@ -573,21 +580,24 @@ function isOnSolidGround(x, y, isMario, ignoresEnemies)
 	{
 		for(let i = 0; i < blocks1.length; i++)
 		{
-			if (x + 5<= blocks1[i].col*37.5 + 37.5 &&
-			   x + 34 >= blocks1[i].col*37.5 &&
-			   y <= blocks1[i].row*37.5 + 37.5 &&
-			   y + 75 >= blocks1[i].row*37.5 ) {
+			for(let i = 0; i < blocks1.length; i++)
+		{
+			if (x + 5<= Math.floor(blocks1[i].col*37.5 + 37.5) &&
+			   x + 34 >= Math.floor(blocks1[i].col*37.5) &&
+			   y <= Math.floor(blocks1[i].row*37.5 + 37.5) &&
+			   y + 75 >= Math.floor(blocks1[i].row*37.5 )) {
 					//console.log("there was a collision and the index was i " + i);
 					return true;
 				}
+		}
 		}
 		
 		
 		for(let i = 0; i < gameObjects.length; i++)
 		{
-			if (x <= gameObjects[i].x + 36&&
-			   x + 36 >= gameObjects[i].x &&
-			   y <= gameObjects[i].y + 37 &&
+			if (x + 5 <= gameObjects[i].x + 37.5&&
+			   x + 34 >= gameObjects[i].x &&
+			   y <= gameObjects[i].y + 37.5 &&
 			   y + 75 >= gameObjects[i].y ) {
 					//console.log("there was a collision and the index was i " + i);
 					let enemyRow = Math.floor(gameObjects[i].y /37.5);
@@ -620,10 +630,10 @@ function isOnSolidGround(x, y, isMario, ignoresEnemies)
 	{
 		for(let i = 0; i < blocks1.length; i++)
 		{
-			if (x + 5<= blocks1[i].col*37.5 + 37.5 &&
-			   x + 34 >= blocks1[i].col*37.5 &&
-			   y <= blocks1[i].row*37.5 + 37.5 &&
-			   y + 37.5 >= blocks1[i].row*37.5 ) {
+			if (x + 5<= Math.floor(blocks1[i].col*37.5 + 37.5) &&
+			   x + 34 >= Math.floor(blocks1[i].col*37.5) &&
+			   y <= Math.floor(blocks1[i].row*37.5 + 37.5) &&
+			   y + 37 >= Math.floor(blocks1[i].row*37.5 )) {
 					//console.log("there was a collision and the index was i " + i);
 					return true;
 				}
@@ -632,10 +642,10 @@ function isOnSolidGround(x, y, isMario, ignoresEnemies)
 		
 		for(let i = 0; i < gameObjects.length; i++)
 		{
-			if (x <= gameObjects[i].x + 36&&
-			   x + 36 >= gameObjects[i].x &&
+			if (x + 5 <= gameObjects[i].x + 37&&
+			   x + 34 >= gameObjects[i].x &&
 			   y <= gameObjects[i].y + 37 &&
-			   y + 37.5 >= gameObjects[i].y ) {
+			   y + 37 >= gameObjects[i].y ) {
 					//console.log("there was a collision and the index was i " + i);
 					let enemyRow = Math.floor(gameObjects[i].y /37.5);
 					if(enemyRow >= row + 1)
@@ -650,9 +660,70 @@ function isOnSolidGround(x, y, isMario, ignoresEnemies)
 							animationCounter = 0;
 							currentAnimation = 0;
 						}
+						if(gameObjects[i].isMushroom)
+						{
+							gameObjects.splice(i, 1);
+							isBig = true;
+							playSound("./media/smb_powerup.wav");
+						}
+						if(gameObjects[i].is1Up)
+						{
+							gameObjects.splice(i, 1);
+							marioLives += 1;
+							playSound("./media/smb_powerup.wav");
+						}
+						if(gameObjects[i].isFlower)
+						{
+							gameObjects.splice(i, 1);
+							isBig = true;
+							canFire = true;
+							playSound("./media/smb_powerup.wav");
+						}
+						
 						if(ignoresEnemies)
 						{
 							return false;
+						}
+						else
+						{
+							return true;
+						}
+					}
+				}
+		}
+	}
+	if(isFireball)
+	{
+		for(let i = 0; i < blocks1.length; i++)
+		{
+			
+			if (x + 5<= Math.floor(blocks1[i].col*37.5 + 37.5) &&
+			   x + 8 >= Math.floor(blocks1[i].col*37.5) &&
+			   y <= Math.floor(blocks1[i].row*37.5 + 37.5) &&
+			   y + 37/2 >= Math.floor(blocks1[i].row*37.5 )) {
+					//console.log("there was a collision and the index was i " + i);
+					return true;
+				}
+		}
+		
+		
+		for(let i = 0; i < gameObjects.length; i++)
+		{
+			if (x <= gameObjects[i].x + 36&&
+			   x + 37.5/2 >= gameObjects[i].x &&
+			   y <= gameObjects[i].y + 37 &&
+			   y + 37.5/2 >= gameObjects[i].y ) {
+					//console.log("there was a collision and the index was i " + i);
+					let enemyRow = Math.floor(gameObjects[i].y /37.5);
+					if(enemyRow >= row + 1)
+					{
+						if(gameObjects[i].isEnemy)
+						{
+							gameObjects[i].hasBeenKilled = true;
+							if(fireIndex > -1)
+							{
+								projectiles.splice(fireIndex, 1);
+							}
 						}
 						else
 						{
@@ -666,10 +737,10 @@ function isOnSolidGround(x, y, isMario, ignoresEnemies)
 	{
 		for(let i = 0; i < blocks1.length; i++)
 		{
-			if (x + 5<= blocks1[i].col*37.5 + 37.5 &&
-			   x + 34 >= blocks1[i].col*37.5 &&
-			   y <= blocks1[i].row*37.5 + 37.5 &&
-			   y + 37.5 >= blocks1[i].row*37.5 ) {
+			if (x + 5<= Math.floor(blocks1[i].col*37.5 + 37.5) &&
+			   x + 34 >= Math.floor(blocks1[i].col*37.5) &&
+			   y <= Math.floor(blocks1[i].row*37.5 + 37.5) &&
+			   y + 37 >= Math.floor(blocks1[i].row*37.5 )) {
 					//console.log("there was a collision and the index was i " + i);
 					return true;
 				}
@@ -713,23 +784,81 @@ function isOnSolidGround(x, y, isMario, ignoresEnemies)
 	return false;
 }
 
-function isBlockedInX(x, y, isMario, ignoresEnemies)
+function isBlockedInX(x, y, isMario, ignoresEnemies, isFireball, fireIndex = -1)
 {
+	
+	
 	let col = Math.floor(x /37.5);
 	let row = Math.floor(y /37.5);
 	
+	
 	blocks1 = [];
 	
-	for(let i = 0; i <= row; i++)
+	if(isMario && isBig)
 	{
-		for(let j = 0; j < level1_1[i].length; j++)
-			{
-				if(level1_1[i][j] == 1)
+		row = Math.floor(y /37.5) + 1;
+			
+		for(let i = 0; i <= row; i++)
+		{
+			for(let j = 0; j < level1_1[i].length; j++)
 				{
-					blocks1.push(new Point(i, j));
+					if(level1_1[i][j] == 1)
+					{
+						blocks1.push(new Point(i, j));
+					}
 				}
-			}
-	}		
+		}	
+
+	}
+	else
+	{
+		for(let i = 0; i <= row; i++)
+		{
+			for(let j = 0; j < level1_1[i].length; j++)
+				{
+					if(level1_1[i][j] == 1)
+					{
+						blocks1.push(new Point(i, j));
+					}
+				}
+		}
+	}
+	
+	if(isFireball)
+	{
+		for(let i = 0; i < blocks1.length; i++)
+		{
+			if (x <= blocks1[i].col*37.5 + 37.5 &&
+			   x + 37.5/2 >= blocks1[i].col*37.5 &&
+			   y <= blocks1[i].row*37.5 + 37.5 &&
+			   y + 37.5/2 >= blocks1[i].row*37.5 ) {
+					//console.log("there was a collision and the index was i " + i);
+					
+					if(fireIndex > -1)
+					{
+						projectiles.splice(fireIndex, 1);
+					}
+				}
+		}
+	
+		for(let i = 0; i < gameObjects.length; i++)
+		{
+			let objectRow = Math.floor(gameObjects[i].y /37.5);
+			if (x <= gameObjects[i].x + 37.5&&
+			   x + 37.5/2 >= gameObjects[i].x &&
+			   y <= gameObjects[i].y + 37.5 &&
+			   y + 37.5/2 >= gameObjects[i].y) {
+						if(gameObjects[i].isEnemy)
+							{
+								gameObjects[i].hasBeenKilled = true;
+								if(fireIndex > -1)
+								{
+									projectiles.splice(fireIndex, 1);
+								}
+							}
+				}
+		}
+	}
 	
 	
 	if(isMario && isBig)
@@ -760,21 +889,26 @@ function isBlockedInX(x, y, isMario, ignoresEnemies)
 								frame = 0;
 								playSound("./media/smb_mariodie.wav");
 							}
-						if(isMario && gameObjects[i].isMushroom)
+						if(gameObjects[i] != null && gameObjects[i].isMushroom)
 						{
 							gameObjects.splice(i, 1);
 							isBig = true;
 							playSound("./media/smb_powerup.wav");
 						}
-						if(gameObjects[i].isFlower)
+						if(gameObjects[i] != null && gameObjects[i].is1Up)
 						{
 							gameObjects.splice(i, 1);
-							
+							marioLives += 1;
+							playSound("./media/smb_powerup.wav");
+						}
+						if(gameObjects[i] != null && gameObjects[i].isFlower)
+						{
+							gameObjects.splice(i, 1);
+							isBig = true;
 							canFire = true;
 							playSound("./media/smb_powerup.wav");
 						}
-						if( !gameObjects[i].x == x ||
-						!gameObjects[i].x == x)
+						if(gameObjects[i] != null && !gameObjects[i].x == x)
 						{
 							if(ignoreEnemies == true && gameObjects[i].isEnemy)
 							{
@@ -816,15 +950,21 @@ function isBlockedInX(x, y, isMario, ignoresEnemies)
 								frame = 0;
 								playSound("./media/smb_mariodie.wav");
 							}
-						if(isMario && gameObjects[i].isMushroom)
+						if(gameObjects[i] != null && gameObjects[i].isMushroom)
 						{
 							gameObjects.splice(i, 1);
 							marioY -= 38;
 							isBig = true;
 							playSound("./media/smb_powerup.wav");
 						}
+						if(gameObjects[i] != null && gameObjects[i].is1Up)
+						{
+							gameObjects.splice(i, 1);
+							marioLives += 1;
+							playSound("./media/smb_powerup.wav");
+						}
 						
-						if(gameObjects[i].isFlower)
+						if(gameObjects[i] != null && gameObjects[i].isFlower)
 						{
 							gameObjects.splice(i, 1);
 							marioY -= 38;
@@ -832,8 +972,7 @@ function isBlockedInX(x, y, isMario, ignoresEnemies)
 							canFire = true;
 							playSound("./media/smb_powerup.wav");
 						}
-						if( !gameObjects[i].x == x ||
-						!gameObjects[i].x == x)
+						if(gameObjects[i] != null && !gameObjects[i].x == x)
 						{
 							if(ignoreEnemies == true && gameObjects[i].isEnemy)
 							{
@@ -874,7 +1013,8 @@ function isBlockedInX(x, y, isMario, ignoresEnemies)
 						if( !gameObjects[i].x == x ||
 						!gameObjects[i].x == x)
 						{
-							if(ignoreEnemies == true && gameObjects[i].isEnemy)
+							if(ignoreEnemies == true && 
+							gameObjects[i].isEnemy)
 							{
 								return false;
 							}
@@ -931,7 +1071,8 @@ function drawGameObjects()
 			
 			if(gameObjects[i].isQuestionBrick == true)
 			{
-				if(gameObjects[i].needsBounce && !gameObjects[i].hasBeenHit)
+				if(gameObjects[i].needsBounce && 
+				!gameObjects[i].hasBeenHit)
 				{
 					if(gameObjects[i].frame < 8)
 					{
@@ -1041,12 +1182,14 @@ function drawGameObjects()
 					gameObjects[i].x += gameObjects[i].speed;
 				}
 				
-				if(isBlockedInX(gameObjects[i].x + 4, gameObjects[i].y, false, true))
+				if(isBlockedInX(gameObjects[i].x + 4, 
+				gameObjects[i].y, false, true, false))
 				{
 					gameObjects[i].speed *= -1;
 				}
 				
-				if(!isOnSolidGround(gameObjects[i].x, gameObjects[i].y, false, true))
+				if(!isOnSolidGround(gameObjects[i].x, 
+				gameObjects[i].y, false, true, false))
 					{
 						gameObjects[i].y += 6;
 					}
@@ -1096,7 +1239,8 @@ function drawGameObjects()
 					if(gameObjects[i].isFacingRight)
 					{
 						gameObjects[i].x += gameObjects[i].speed;
-						if(isBlockedInX(gameObjects[i].x, gameObjects[i].y, false, false))
+						if(isBlockedInX(gameObjects[i].x, 
+						gameObjects[i].y, false, false, false))
 						{
 							gameObjects[i].isFacingRight = !gameObjects[i].isFacingRight;
 						}
@@ -1104,13 +1248,15 @@ function drawGameObjects()
 					else
 					{
 						gameObjects[i].x -= gameObjects[i].speed;
-						if(isBlockedInX(gameObjects[i].x, gameObjects[i].y, false, false))
+						if(isBlockedInX(gameObjects[i].x, 
+						gameObjects[i].y, false, false, false))
 						{
 							gameObjects[i].isFacingRight = !gameObjects[i].isFacingRight;
 						}
 					}
 					
-					if(!isOnSolidGround(gameObjects[i].x, gameObjects[i].y, false, false))
+					if(!isOnSolidGround(gameObjects[i].x, 
+					gameObjects[i].y, false, false, false))
 					{
 						gameObjects[i].y += 6;
 					}
@@ -1175,18 +1321,26 @@ function printMap(level)
 				///top of pipe
 				if(level[i][j] == 2)
 				{
-					ctx.drawImage(worldItems, 275, 332, 16, 16, (j*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
-					ctx.drawImage(worldItems, 275, 332, 16, 16, (j*37.5) - marioX + 300, ((i+1)*37.5), 37.5, 37.5);
-					ctx.drawImage(worldItems, 275, 332, 16, 16, ((j+1)*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
-					ctx.drawImage(worldItems, 275, 332, 16, 16, ((j+1)*37.5) - marioX + 300, ((i+1)*37.5), 37.5, 37.5);
-					ctx.drawImage(worldItems, 614, 46, 32, 32, (j*37.5) - marioX + 300, (i*37.5) +4, 75, 75);
+					ctx.drawImage(worldItems, 275, 332, 16, 16, 
+					(j*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 275, 332, 16, 16, 
+					(j*37.5) - marioX + 300, ((i+1)*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 275, 332, 16, 16, 
+					((j+1)*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 275, 332, 16, 16, 
+					((j+1)*37.5) - marioX + 300, ((i+1)*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 614, 46, 32, 32, 
+					(j*37.5) - marioX + 300, (i*37.5) +4, 75, 75);
 				}
 				//extension
 				if(level[i][j] == 3)
 				{
-					ctx.drawImage(worldItems, 275, 332, 16, 16, (j*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
-					ctx.drawImage(worldItems, 275, 332, 16, 16, ((j+1)*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
-					ctx.drawImage(worldItems, 614, 83, 32, 16, (j*37.5) - marioX + 300, (i*37.5) +2, 75, 37.5);
+					ctx.drawImage(worldItems, 275, 332, 16, 16, 
+					(j*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 275, 332, 16, 16, 
+					((j+1)*37.5) - marioX + 300, (i*37.5), 37.5, 37.5);
+					ctx.drawImage(worldItems, 614, 83, 32, 16, 
+					(j*37.5) - marioX + 300, (i*37.5) +2, 75, 37.5);
 				}
 				
 			}
@@ -1200,7 +1354,7 @@ function controls()
 	
 	if(rightPressed && isFalling)
 	{
-		if(!isBlockedInX(marioX + 10 , marioY+10, true, false))
+		if(!isBlockedInX(marioX + 10 , marioY+10, true, false, false))
 		{
 			marioX += speed;
 			
@@ -1208,21 +1362,21 @@ function controls()
 	}
 	else if(leftPressed && isFalling)
 	{
-		if(!isBlockedInX(marioX - 10, marioY+10, true, false))
+		if(!isBlockedInX(marioX - 10, marioY+10, true, false, false))
 		{
 			marioX -= speed;
 		}
 	}
 	else if(rightPressed)
 	{
-		if(!isBlockedInX(marioX + 4 , marioY, true, false))
+		if(!isBlockedInX(marioX + 4 , marioY, true, false, false))
 		{
 			marioX += speed;
 		}
 	}
 	else if(leftPressed)
 	{
-		if(!isBlockedInX(marioX - 4, marioY, true, false))
+		if(!isBlockedInX(marioX - 4, marioY, true, false, false))
 		{
 			marioX -= speed;
 		}
@@ -1251,21 +1405,21 @@ function controls()
 
 	if(isFalling)
 	{
-		if(isOnSolidGround(marioX, marioY + 2, true, false))
+		if(isOnSolidGround(marioX, marioY , true, false, false))
 		{
 			isFalling = false;
 		}
 		
 	}
 	
-	if(!isOnSolidGround(marioX, marioY + 2, true, false))
+	if(!isOnSolidGround(marioX, marioY + 2, true, false, false))
 	{
 		
 		marioY += 10;
 	}
 	
 	
-	isBlockedInX(marioX , marioY, true, false);
+	isBlockedInX(marioX , marioY, true, false, false);
 }
 
 function drawMario()
@@ -1336,15 +1490,18 @@ function drawMario()
 			{
 				if(currentAnimation == 0)
 				{
-					ctx.drawImage(worldItems, 84, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+					ctx.drawImage(worldItems, 84, 507, 16, 16, 
+					relativeX, marioY, 37.5, 37.5);
 				}
 				else if(currentAnimation == 1)
 				{
-					ctx.drawImage(worldItems, 100, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+					ctx.drawImage(worldItems, 100, 507, 16, 16, 
+					relativeX, marioY, 37.5, 37.5);
 				}
 				else if(currentAnimation == 2)
 				{
-					ctx.drawImage(worldItems, 116, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+					ctx.drawImage(worldItems, 116, 507, 16, 16, 
+					relativeX, marioY, 37.5, 37.5);
 				}
 				if(animationCounter >= 4)
 				{
@@ -1358,7 +1515,8 @@ function drawMario()
 			}
 			else
 			{
-				ctx.drawImage(worldItems, 139, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+				ctx.drawImage(worldItems, 139, 507, 16, 16, 
+				relativeX, marioY, 37.5, 37.5);
 				}
 			
 		}
@@ -1369,15 +1527,18 @@ function drawMario()
 			{
 				if(currentAnimation == 0)
 				{
-					ctx.drawImage(worldItems2, 582, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+					ctx.drawImage(worldItems2, 582, 507, 16, 16, 
+					relativeX, marioY, 37.5, 37.5);
 				}
 				else if(currentAnimation == 1)
 				{
-					ctx.drawImage(worldItems2, 565, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+					ctx.drawImage(worldItems2, 565, 507, 16, 16, 
+					relativeX, marioY, 37.5, 37.5);
 				}
 				else if(currentAnimation == 2)
 				{
-					ctx.drawImage(worldItems2, 546 , 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+					ctx.drawImage(worldItems2, 546 , 507, 16, 16, 
+					relativeX, marioY, 37.5, 37.5);
 				}
 				if(animationCounter >= 4)
 				{
@@ -1391,29 +1552,34 @@ function drawMario()
 			}
 			else
 			{
-				ctx.drawImage(worldItems2, 524, 507, 16, 16, relativeX, marioY, 37.5, 37.5);	
+				ctx.drawImage(worldItems2, 524, 507, 16, 16, 
+				relativeX, marioY, 37.5, 37.5);	
 			}
 		}
 		else if(jumping || isFalling)
 			{
 					if(lastButtonPressed == "right")
 					{
-						ctx.drawImage(worldItems, 139, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+						ctx.drawImage(worldItems, 139, 507, 16, 16, 
+						relativeX, marioY, 37.5, 37.5);
 					}
 					if(lastButtonPressed == "left")
 					{
-						ctx.drawImage(worldItems2, 524, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+						ctx.drawImage(worldItems2, 524, 507, 16, 16, 
+						relativeX, marioY, 37.5, 37.5);
 					}
 			}
 	else
 		{
 			if(lastButtonPressed == "right")
 				{
-					ctx.drawImage(worldItems, 22, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+					ctx.drawImage(worldItems, 22, 507, 16, 16, 
+					relativeX, marioY, 37.5, 37.5);
 				}
 			if(lastButtonPressed == "left")
 				{
-					ctx.drawImage(worldItems2, 643, 507, 16, 16, relativeX, marioY, 37.5, 37.5);
+					ctx.drawImage(worldItems2, 643, 507, 16, 16, 
+					relativeX, marioY, 37.5, 37.5);
 				}
 		}
 		}
@@ -1450,11 +1616,13 @@ function drawMario()
 			}
 			if(lastButtonPressed == "right")
 				{
-					ctx.drawImage(worldItems, 238, 628, 16, 32, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems, 238, 628, 16, 32, 
+					relativeX, marioY, 37.5, 75);
 				}
 			if(lastButtonPressed == "left")
 				{
-					ctx.drawImage(worldItems2, 426, 628, 16, 32, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems2, 426, 628, 16, 32, 
+					relativeX, marioY, 37.5, 75);
 				}
 		}
 		
@@ -1485,15 +1653,20 @@ function drawMario()
 			{
 				if(currentAnimation == 0)
 				{
-					ctx.drawImage(worldItems, 166, 631, 16, 34, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems, 166, 631, 16, 34, 
+					relativeX, marioY + 5, 37.5, 75);
 				}
 				else if(currentAnimation == 1)
 				{
-					ctx.drawImage(worldItems, 188, 631, 16, 34, relativeX, marioY, 37.5,75);
+					
+					
+					ctx.drawImage(worldItems, 211, 631, 16, 34, 
+					relativeX, marioY + 5, 37.5, 75);
 				}
 				else if(currentAnimation == 2)
 				{
-					ctx.drawImage(worldItems, 211, 631, 16, 34, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems, 188, 631, 16, 34, 
+					relativeX, marioY + 5, 37.5,75);
 				}
 				if(animationCounter >= 4)
 				{
@@ -1507,7 +1680,8 @@ function drawMario()
 			}
 			else
 			{
-				ctx.drawImage(worldItems, 238, 628, 16, 32, relativeX, marioY, 37.5, 75);
+				ctx.drawImage(worldItems, 238, 628, 16, 32, 
+				relativeX, marioY + 5, 37.5, 75);
 			}
 			
 		}
@@ -1518,15 +1692,20 @@ function drawMario()
 			{
 				if(currentAnimation == 0)
 				{
-					ctx.drawImage(worldItems2, 500, 631, 16, 34, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems2, 500, 631, 16, 34, 
+					relativeX, marioY+5, 37.5, 75);
 				}
 				else if(currentAnimation == 1)
 				{
-					ctx.drawImage(worldItems2, 478, 631, 16, 34, relativeX, marioY, 37.5, 75);
+					
+					
+					ctx.drawImage(worldItems2, 453 , 631, 16, 34, 
+					relativeX, marioY+5, 37.5, 75);
 				}
 				else if(currentAnimation == 2)
 				{
-					ctx.drawImage(worldItems2, 453 , 631, 16, 34, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems2, 478, 631, 16, 34, 
+					relativeX, marioY+5, 37.5, 75);
 				}
 				if(animationCounter >= 4)
 				{
@@ -1540,29 +1719,34 @@ function drawMario()
 			}
 			else
 			{
-				ctx.drawImage(worldItems2, 426, 628, 16, 34, relativeX, marioY, 37.5, 75);	
+				ctx.drawImage(worldItems2, 426, 628, 16, 34, 
+				relativeX, marioY +5, 37.5, 75);	
 			}
 		}
 		else if(jumping || isFalling)
 			{
 					if(lastButtonPressed == "right")
 					{
-						ctx.drawImage(worldItems, 238, 628, 16, 32, relativeX, marioY, 37.5, 75);
+						ctx.drawImage(worldItems, 238, 628, 16, 32, 
+						relativeX, marioY, 37.5, 75);
 					}
 					if(lastButtonPressed == "left")
 					{
-						ctx.drawImage(worldItems2, 426, 628, 16, 34, relativeX, marioY, 37.5, 75);
+						ctx.drawImage(worldItems2, 426, 628, 16, 34,
+						relativeX, marioY, 37.5, 75);
 					}
 			}
 	else
 		{
 			if(lastButtonPressed == "right")
 				{
-					ctx.drawImage(worldItems, 119, 630, 16, 32, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems, 119, 630, 16, 32, 
+					relativeX, marioY, 37.5, 75);
 				}
 			if(lastButtonPressed == "left")
 				{
-					ctx.drawImage(worldItems2, 545, 630, 16, 34, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems2, 545, 630, 16, 34, 
+					relativeX, marioY, 37.5, 75);
 				}
 		}
 		}
@@ -1589,11 +1773,13 @@ function drawMario()
 			}
 			if(lastButtonPressed == "right")
 				{
-					ctx.drawImage(worldItems, 48, 546, 16, 32, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems, 48, 546, 16, 32, 
+					relativeX, marioY, 37.5, 75);
 				}
 				if(lastButtonPressed == "left")
 				{
-					ctx.drawImage(worldItems2, 497, 546, 16, 32, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems2, 497, 546, 16, 32, 
+					relativeX, marioY, 37.5, 75);
 				}
 		}
 		
@@ -1624,15 +1810,20 @@ function drawMario()
 			{
 				if(currentAnimation == 0)
 				{
-					ctx.drawImage(worldItems, 95, 547, 16, 34, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems, 95, 547, 16, 34, 
+					relativeX, marioY, 37.5, 75);
 				}
 				else if(currentAnimation == 1)
 				{
-					ctx.drawImage(worldItems, 115, 547, 16, 34, relativeX, marioY, 37.5,75);
+					
+					
+					ctx.drawImage(worldItems, 140, 547, 16, 34, 
+					relativeX, marioY, 37.5, 75);
 				}
 				else if(currentAnimation == 2)
 				{
-					ctx.drawImage(worldItems, 140, 547, 16, 34, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems, 115, 547, 16, 34, 
+					relativeX, marioY, 37.5,75);
 				}
 				if(animationCounter >= 4)
 				{
@@ -1646,7 +1837,8 @@ function drawMario()
 			}
 			else
 			{
-				ctx.drawImage(worldItems, 167, 548, 16, 32, relativeX, marioY, 37.5, 75);
+				ctx.drawImage(worldItems, 167, 548, 16, 32, 
+				relativeX, marioY, 37.5, 75);
 			}
 			
 		}
@@ -1657,15 +1849,20 @@ function drawMario()
 			{
 				if(currentAnimation == 0)
 				{
-					ctx.drawImage(worldItems2, 572, 547, 16, 34, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems2, 570, 547, 18, 34, 
+					relativeX, marioY, 37.5, 75);
 				}
 				else if(currentAnimation == 1)
 				{
-					ctx.drawImage(worldItems2, 549, 547, 16, 34, relativeX, marioY, 37.5, 75);
+					
+					
+					ctx.drawImage(worldItems2, 522 , 547, 18, 34, 
+					relativeX, marioY, 37.5, 75);
 				}
 				else if(currentAnimation == 2)
 				{
-					ctx.drawImage(worldItems2, 524 , 547, 16, 34, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems2, 547, 547, 18, 34, 
+					relativeX, marioY, 37.5, 75);
 				}
 				if(animationCounter >= 4)
 				{
@@ -1679,29 +1876,34 @@ function drawMario()
 			}
 			else
 			{
-				ctx.drawImage(worldItems2, 497, 546, 16, 34, relativeX, marioY, 37.5, 75);	
+				ctx.drawImage(worldItems2, 497, 546, 18, 34, 
+				relativeX, marioY, 37.5, 75);	
 			}
 		}
 		else if(jumping || isFalling)
 			{
 					if(lastButtonPressed == "right")
 					{
-						ctx.drawImage(worldItems, 167, 546, 16, 34, relativeX, marioY, 37.5, 75);
+						ctx.drawImage(worldItems, 167, 546, 16, 34, 
+						relativeX, marioY, 37.5, 75);
 					}
 					if(lastButtonPressed == "left")
 					{
-						ctx.drawImage(worldItems2, 497, 546, 16, 34, relativeX, marioY, 37.5, 75);
+						ctx.drawImage(worldItems2, 497, 546, 16, 34, 
+						relativeX, marioY, 37.5, 75);
 					}
 			}
 	else
 		{
 			if(lastButtonPressed == "right")
 				{
-					ctx.drawImage(worldItems, 48, 548, 16, 32, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems, 48, 545, 16, 32, 
+					relativeX, marioY, 37.5, 75);
 				}
 			if(lastButtonPressed == "left")
 				{
-					ctx.drawImage(worldItems2, 617, 549, 16, 32, relativeX, marioY, 37.5, 75);
+					ctx.drawImage(worldItems2, 615, 549, 18, 32, 
+					relativeX, marioY, 37.5, 75);
 				}
 		}
 		}
@@ -1718,35 +1920,40 @@ function drawBackground()
 			///large hill
 			ctx.drawImage(worldItems, 99, 160, 80, 35, 
 				backgroundGameObjects[i].x - marioX + 300, 
-				backgroundGameObjects[i].y, 37.5 * (80/16), 37.5 * (35/16));
+				backgroundGameObjects[i].y, 37.5 * (80/16), 
+				37.5 * (35/16));
 		}
 		if(backgroundGameObjects[i].type == 1)
 		{
 			///single cloud
 			ctx.drawImage(worldItems, 162, 198, 32, 24, 
 				backgroundGameObjects[i].x - marioX + 300, 
-				backgroundGameObjects[i].y, 37.5 * (32/16), 37.5 * (24/16));
+				backgroundGameObjects[i].y, 37.5 * (32/16), 
+				37.5 * (24/16));
 		}
 		if(backgroundGameObjects[i].type == 2)
 		{
 			///double cloud
 			ctx.drawImage(worldItems, 46, 198, 48, 24, 
 				backgroundGameObjects[i].x - marioX + 300, 
-				backgroundGameObjects[i].y, 37.5 * (48/16), 37.5 * (24/16));
+				backgroundGameObjects[i].y, 37.5 * (48/16), 
+				37.5 * (24/16));
 		}
 		if(backgroundGameObjects[i].type == 3)
 		{
 			///triple cloud
 			ctx.drawImage(worldItems, 96, 198, 64, 24, 
 				backgroundGameObjects[i].x - marioX + 300, 
-				backgroundGameObjects[i].y, 37.5 * (64/16), 37.5 * (24/16));
+				backgroundGameObjects[i].y, 37.5 * (64/16), 
+				37.5 * (24/16));
 		}
 		if(backgroundGameObjects[i].type == 4)
 		{
 			///small hill
 			ctx.drawImage(worldItems, 48, 176, 48, 18, 
 				backgroundGameObjects[i].x - marioX + 300, 
-				backgroundGameObjects[i].y, 37.5 * (48/16), 37.5 * (18/16));
+				backgroundGameObjects[i].y, 37.5 * (48/16), 
+				37.5 * (18/16));
 		}
 	}
 }
@@ -1755,19 +1962,8 @@ function drawProjectiles()
 {
 	for( let i = 0; i < projectiles.length; i++)
 	{
-		coinCounter += 1;
-		if(coinCounter < 4)
-		{
-			projectiles[i].y += projectiles[i].verticalSpeed;
-		}
-		else if( coinCounter < 8)
-		{
-		
-		}
-		else
-		{
-			coinCounter = 0;
-		}
+
+		projectiles[i].y += projectiles[i].verticalSpeed;
 		projectiles[i].x += projectiles[i].speed;
 		projectiles[i].timer += 1;
 		if(projectiles[i].timer % 3== 0)
@@ -1802,15 +1998,31 @@ function drawProjectiles()
 			ctx.drawImage(worldItems, 348, 945, 8, 8, 
 				projectiles[i].x - marioX + 300, 
 				projectiles[i].y, 37.5/2, 37.5/2);
-		}	
+		}
+
+		if(isOnSolidGround(projectiles[i].x, projectiles[i].y + 4, 
+			false, false, true, i))
+		{
+			console.log("is true.");
+			projectiles[i].verticalSpeed *= -1;
+			projectiles[i].originalY = projectiles[i].y - 40;
+		}
+
+
+		if(projectiles[i].originalY > projectiles[i].y)
+		{
+			projectiles[i].verticalSpeed *= -1;
+		}
+		
+		isBlockedInX(projectiles[i].x , projectiles[i].y, false, false, true, i);
 	}
 }
 
 function drawGameStart()
 {
-	ctx.fillStyle = "rgb(20,20,20)";
-	ctx.font = "30px Arial";
-	ctx.fillText("Click enter to start", 200, 200);
+	ctx.fillStyle = "rgb(255,255,255)";
+	ctx.font = "45px Arial";
+	ctx.fillText("Click Enter to Start", 100, 300);
 }
 
 function draw () {
