@@ -12,6 +12,11 @@ let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
 document.addEventListener("keydown",keyDownHandler, false);
 document.addEventListener("keyup",keyUpHandler,false);
+let gameTimer = 0;
+let gameTime = 400;
+let numCoins = 0;
+let coinFrame = 16;
+let score = 0;
 let hasStartedGame = false;
 let rightPressed = false;
 let leftPressed = false;
@@ -55,6 +60,8 @@ function GameObject()
 {
 	this.x = 0;
 	this.y = 0;
+	this.w = 37.5;
+	this.h = 37.5;
 	this.isBrick = false;
 	this.isQuestionBrick = false;
 	this.hasBeenHit = false;
@@ -94,6 +101,87 @@ gameObject.originalX = 480;
 gameObject.originalY = 375;
 gameObject.isBrick = true;
 gameObject.containsCoins = true;
+gameObjects.push(gameObject);
+
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 16*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 15*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 14*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 13*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 12*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 11*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 10*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 9*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 8*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 7*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 6*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 5*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 4*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 3*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 2*37.5;
+gameObject.isBrick = true;
+gameObjects.push(gameObject);
+gameObject = new GameObject();
+gameObject.x = 35*37.5;
+gameObject.y = 1*37.5;
+gameObject.isBrick = true;
 gameObjects.push(gameObject);
 
 gameObject = new GameObject();
@@ -788,7 +876,7 @@ function isBlockedInX(x, y, isMario, ignoresEnemies, isFireball, fireIndex = -1)
 {
 	
 	
-	let col = Math.floor(x /37.5);
+	let col = Math.floor(x + speed /37.5);
 	let row = Math.floor(y /37.5);
 	
 	
@@ -908,17 +996,7 @@ function isBlockedInX(x, y, isMario, ignoresEnemies, isFireball, fireIndex = -1)
 							canFire = true;
 							playSound("./media/smb_powerup.wav");
 						}
-						if(gameObjects[i] != null && !gameObjects[i].x == x)
-						{
-							if(ignoreEnemies == true && gameObjects[i].isEnemy)
-							{
-								return false;
-							}
-							else
-							{
-								return true;
-							}
-						}
+						return true;
 				}
 		}
 	}
@@ -939,8 +1017,8 @@ function isBlockedInX(x, y, isMario, ignoresEnemies, isFireball, fireIndex = -1)
 		for(let i = 0; i < gameObjects.length; i++)
 		{
 			let objectRow = Math.floor(gameObjects[i].y /37.5);
-			if (x + 10<= gameObjects[i].x + 37.5&&
-			   x + 15 >= gameObjects[i].x &&
+			if (x <= gameObjects[i].x + 37.5&&
+			   x + 37 >= gameObjects[i].x &&
 			   y <= gameObjects[i].y + 37.5 &&
 			   y + 75 >= gameObjects[i].y) {
 						if(isMario && gameObjects[i].isEnemy)
@@ -972,17 +1050,8 @@ function isBlockedInX(x, y, isMario, ignoresEnemies, isFireball, fireIndex = -1)
 							canFire = true;
 							playSound("./media/smb_powerup.wav");
 						}
-						if(gameObjects[i] != null && !gameObjects[i].x == x)
-						{
-							if(ignoreEnemies == true && gameObjects[i].isEnemy)
-							{
-								return false;
-							}
-							else
-							{
-								return true;
-							}
-						}
+						return true;
+						
 				}
 		}
 	}
@@ -1003,8 +1072,8 @@ function isBlockedInX(x, y, isMario, ignoresEnemies, isFireball, fireIndex = -1)
 		for(let i = 0; i < gameObjects.length; i++)
 		{
 			let objectRow = Math.floor(gameObjects[i].y /37.5);
-			if (x + 10<= gameObjects[i].x + 37.5&&
-			   x + 15 >= gameObjects[i].x &&
+			if (x <= gameObjects[i].x + 37.5&&
+			   x + 37 >= gameObjects[i].x &&
 			   y <= gameObjects[i].y + 37.5 &&
 			   y + 37.5 >= gameObjects[i].y) {
 					
@@ -1354,7 +1423,8 @@ function controls()
 	
 	if(rightPressed && isFalling)
 	{
-		if(!isBlockedInX(marioX + 10 , marioY+10, true, false, false))
+		//if(!isBlockedInX(marioX + 10 , marioY+10, true, false, false))
+		if(!anyJumpCollision())
 		{
 			marioX += speed;
 			
@@ -1362,25 +1432,43 @@ function controls()
 	}
 	else if(leftPressed && isFalling)
 	{
-		if(!isBlockedInX(marioX - 10, marioY+10, true, false, false))
+		//if(!isBlockedInX(marioX - 10, marioY+10, true, false, false))
+		if(!anyJumpCollision())
+		{
+			marioX -= speed;
+		}
+	}
+	else if(rightPressed && jumping)
+	{
+		if(!anyJumpCollision())
+		{
+			marioX += speed;
+		}
+	}
+	else if(leftPressed && jumping)
+	{
+		//if(!isBlockedInX(marioX - speed, marioY, true, false, false))
+		if(!anyJumpCollision())
+		{
+			marioX -= speed;
+		}
+	}
+	else if(leftPressed)
+	{
+		if(!isBlockedInX(marioX - speed -1, marioY, true, false, false))
 		{
 			marioX -= speed;
 		}
 	}
 	else if(rightPressed)
 	{
-		if(!isBlockedInX(marioX + 4 , marioY, true, false, false))
+		//
+		if(!isBlockedInX(marioX + speed +1, marioY, true, false, false))
 		{
 			marioX += speed;
 		}
 	}
-	else if(leftPressed)
-	{
-		if(!isBlockedInX(marioX - 4, marioY, true, false, false))
-		{
-			marioX -= speed;
-		}
-	}
+	
 
 	if(jumping)
 	{
@@ -1399,7 +1487,7 @@ function controls()
 			isFalling = true;
 		}
 
-		}
+	}
 	
 	
 
@@ -2018,11 +2106,162 @@ function drawProjectiles()
 	}
 }
 
+function anyJumpCollision()
+{
+	
+	let col = Math.floor(marioX /37.5) - 16;
+	
+	if(isBig)
+	{
+
+		for(let i = 0; i < 16; i++)
+		{
+			for(let j = col; j < col+40; j++)
+			{
+				if(level1_1[i][j] == 1)
+				{
+					if (marioX < (i*37.5) + 37.5 &&
+					    marioX + 37.5 > (i*37.5) &&
+					    marioY < (j*37.5) + 37.5 &&
+					    marioY + 75 > (j*37.5))  {
+							console.log("There is a falling collision");
+							return true;
+							
+						}
+				}
+			}
+		}
+	
+		for(let i = 0; i < gameObjects.length; i++)
+		{
+			if (marioX <= gameObjects[i].x + gameObjects[i].w&&
+				marioX + 37.5 >= gameObjects[i].x &&
+				marioY <= gameObjects[i].y + gameObjects[i].h &&
+			    marioY + 75 >= gameObjects[i].y) {
+					console.log("There is a falling collision");
+					return true;
+				}
+		}
+	}
+	else
+	{
+		for(let i = 0; i < 16; i++)
+		{
+			for(let j = col; j < col+40; j++)
+			{
+				if(level1_1[i][j] == 1)
+				{
+					if (marioX < (i*37.5) + 37.5 &&
+					    marioX + 37.5 > (i*37.5) &&
+					    marioY < (j*37.5) + 37.5 &&
+					    marioY + 37.5 > (j*37.5))  {
+							console.log("There is a falling collision");
+							return true;
+							
+							
+						}
+				}
+			}
+		}
+	
+		for(let i = 0; i < gameObjects.length; i++)
+		{
+			if (marioX <= gameObjects[i].x + gameObjects[i].w&&
+				marioX + 37.5 >= gameObjects[i].x &&
+				marioY <= gameObjects[i].y + gameObjects[i].h &&
+			    marioY + 37.5 >= gameObjects[i].y) {
+					console.log("There is a falling collision");
+					return true;
+				}
+		}
+	}
+	return false;
+
+}
+
 function drawGameStart()
 {
 	ctx.fillStyle = "rgb(255,255,255)";
 	ctx.font = "45px Arial";
 	ctx.fillText("Click Enter to Start", 100, 300);
+}
+
+function drawHUD()
+{
+	gameTimer += 1;
+	if(gameTimer%30 == 0)
+	{
+		gameTime -= 1;
+	}
+	ctx.font = "33px Arial";
+	ctx.fillStyle = "white";
+	ctx.fillText("Time", 13.5 * 37.5 - 20, 37.5);
+	ctx.font = "37.5px Arial";
+	ctx.fillText(gameTime, 13.5 * 37.5, 2*37.5);
+	
+	ctx.font = "33px Arial";
+	ctx.fillText("World", 9.5 * 37.5 - 20, 37.5);
+	ctx.font = "37.5px Arial";
+	ctx.fillText("1-1", 9.5 * 37.5, 2*37.5);
+	
+	let scoreString = "" + score;
+	if(scoreString.length == 1)
+	{
+		scoreString = "00000" + scoreString;
+	}
+	if(scoreString.length == 2)
+	{
+		scoreString = "0000" + scoreString;
+	}
+	if(scoreString.length == 3)
+	{
+		scoreString = "000" + scoreString;
+	}
+	if(scoreString.length == 4)
+	{
+		scoreString = "00" + scoreString;
+	}
+	if(scoreString.length == 5)
+	{
+		scoreString = "0" + scoreString;
+	}
+	
+	ctx.font = "33px Arial";
+	ctx.fillText("MARIO", 1.5 * 37.5 - 20, 37.5);
+	ctx.font = "37.5px Arial";
+	ctx.fillText(scoreString, 1.5 * 37.5 - 20, 2*37.5);
+	
+	//draw coin
+	coinFrame+=1;
+	if(coinFrame > 12)
+	{
+		ctx.drawImage(worldItems3, 16, 96, 16, 16, 
+		5.5 * 37.5, 
+		1.5*37.5, 25, 25);
+	}
+	else if(coinFrame > 8)
+	{
+		ctx.drawImage(worldItems3, 16, 81, 16, 16, 
+		5.5 * 37.5, 
+		1.5*37.5, 25, 25);
+	}
+	else if(coinFrame > 4)
+	{
+		ctx.drawImage(worldItems3, 0, 96, 16, 16, 
+		5.5 * 37.5, 
+		1.5*37.5, 25, 25);
+	}
+	else if(coinFrame >= 0)
+	{
+		ctx.drawImage(worldItems3, 0, 81, 16, 16, 
+		5.5 * 37.5, 
+		1.5*37.5, 25, 25);
+	}
+	if(frame < 0)
+	{
+	 frame = 16;
+	}
+	
 }
 
 function draw () {
@@ -2048,6 +2287,7 @@ function draw () {
 	   drawGameObjects();
 	   drawProjectiles();
 	   drawMario();
+	   drawHUD();
    }
 
    },1000/fps);
